@@ -1,18 +1,18 @@
-[project]
+[tool.poetry]
 name = "csc512c-gamboa-garcia-simulation-project"
 version = "0.1.0"
 description = "Simulation Project For CSC512C for Group 3 (Garcia, Gamboa)"
 authors = [
-    {name = "Kimberly Claire H. Gamboa", email = "kimberly_gamboa@dlsu.edu.ph"},
-    {name = "Andre Emmanuel S. Garcia", email = "andre_emmanuel_garcia@dlsu.edu.ph"}
+    "Kimberly Claire H. Gamboa <kimberly_gamboa@dlsu.edu.ph>",
+    "Andre Emmanuel S. Garcia <andre_emmanuel_garcia@dlsu.edu.ph>"
 ]
 readme = "README.md"
-requires-python = ">=3.14,<4"
-dependencies = [
-    "nicegui (>=3.8.0,<4.0.0)",
-    "fastapi (>=0.135.1,<0.136.0)"
-]
 package-mode = false
+
+[tool.poetry.dependencies]
+python = ">=3.14,<4"
+nicegui = ">=3.8.0,<4.0.0"
+fastapi = ">=0.135.1,<0.136.0"
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
