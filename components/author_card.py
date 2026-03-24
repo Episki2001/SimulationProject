@@ -13,9 +13,6 @@ from nicegui import ui
 def author_card(name: str):
     """
     Display an author card with name and team information.
-    
-    Args:
-        name: Author's full name
     """
     with ui.card().classes("p-6 rounded-xl shadow w-64 text-center"):
         ui.icon("person").classes("text-green-500 text-4xl mb-2")

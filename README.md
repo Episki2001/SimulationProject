@@ -96,7 +96,7 @@ CSC512C-Gamboa-Garcia-Simulation-Project/
 │   └── simulation.py        # Cache simulation engine
 └── components/
     ├── navbar.py            # Navigation bar component
-    ├── hero.py              # Hero section component
+    ├── links.py             # Links section component
     ├── footer.py            # Footer component
     └── stats_card.py        # Statistics card component
 ```

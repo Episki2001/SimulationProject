@@ -151,6 +151,14 @@ def delete_simulation(sim_id: int) -> bool:
     return False
 
 
+def delete_all_simulations() -> int:
+    """Delete all cache simulations. Returns number of simulations deleted."""
+    store = _load_store()
+    count = len(store)
+    _save_store([])
+    return count
+
+
 def get_stats() -> dict:
     """Get simulation counts by status."""
     store = _load_store()

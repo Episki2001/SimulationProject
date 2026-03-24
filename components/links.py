@@ -1,7 +1,7 @@
 from nicegui import ui
 
 
-def hero(
+def links(
     heading: str = "Welcome to the Simulation Project",
     subheading: str = "Run, track, and analyse simulations with ease.",
     cta_label: str = "Get Started",
