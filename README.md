@@ -8,6 +8,14 @@ Repository for CSC512C Simulation Project
 ## Description
 Cache simulation project implementing direct-mapped and set-associative cache architectures with visualization and animation capabilities.
 
+## Tech Stack
+- **Backend**: Python 3.8+
+- **Web Framework**: NiceGUI (FastAPI-based)
+- **Dependency Management**: Poetry
+- **UI Components**: Tailwind CSS (via NiceGUI)
+- **Storage**: Browser localStorage (client-side persistence)
+- **Architecture**: Component-based page routing
+
 ## Features
 - **Direct-Mapped Cache**: Simulate direct-mapped cache with configurable parameters
 - **8-Way Set Associative Cache**: Simulate 8-way set associative cache with LRU replacement
@@ -18,7 +26,7 @@ Cache simulation project implementing direct-mapped and set-associative cache ar
 - **Web Interface**: Modern, interactive UI built with NiceGUI
 
 ## Prerequisites
-- **Python 3.14 or higher**
+- **Python 3.8 or higher**
 - **Poetry** (Python dependency management tool)
 
 ### Installing Poetry
@@ -32,37 +40,60 @@ If you don't have Poetry installed, run:
 curl -sSL https://install.python-poetry.org | python3 -
 ```
 
-## Installation & Deployment
+## Local Setup & Installation
 
-### 1. Clone the Repository
+### Step 1: Clone the Repository
 ```bash
-git clone https://github.com/yourusername/CSC512C-Gamboa-Garcia-Simulation-Project.git
-cd CSC512C-Gamboa-Garcia-Simulation-Project
+git clone https://github.com/Episki2001/SimulationProject.git
+cd SimulationProject
 ```
 
-### 2. Install Dependencies
-Poetry will automatically create a virtual environment and install all dependencies:
+### Step 2: Install Poetry (if not already installed)
+Poetry is required for dependency management. Install it using one of the following methods:
+
+**Windows (PowerShell):**
+```powershell
+(Invoke-WebRequest -Uri https://install.python-poetry.org -UseBasicParsing).Content | python -
+```
+
+**macOS/Linux:**
+```bash
+curl -sSL https://install.python-poetry.org | python3 -
+```
+
+After installation, restart your terminal or add Poetry to your PATH.
+
+### Step 3: Install Project Dependencies
+Poetry will automatically create a virtual environment and install all required dependencies:
 
 ```bash
 poetry install
 ```
 
-### 3. Run the Application
-Start the web server:
+This will:
+- Create a virtual environment for the project
+- Install NiceGUI and all required packages
+- Set up the development environment
+
+### Step 4: Run the Application
+Start the local development server:
 
 ```bash
 poetry run python main.py
 ```
 
-The application will start and be accessible at:
-- **Local**: http://localhost:8080
-- **Network**: The terminal will display the network URL
+You should see output similar to:
+```
+NiceGUI ready to go on http://localhost:8080
+```
 
-### 4. Access the Web Interface
-Open your browser and navigate to:
+### Step 5: Access the Application
+Open your web browser and navigate to:
 ```
 http://localhost:8080
 ```
+
+The application will be running with hot-reload enabled, so any code changes will automatically refresh the browser.
 
 ## Usage
 
@@ -87,18 +118,28 @@ After creating a simulation, you can:
 
 ## Project Structure
 ```
-CSC512C-Gamboa-Garcia-Simulation-Project/
+SimulationProject/
 ├── main.py                    # Application entry point
 ├── pyproject.toml            # Poetry configuration and dependencies
 ├── README.md                 # This file
 ├── backend/
-│   ├── data.py              # Data models and persistence
-│   └── simulation.py        # Cache simulation engine
-└── components/
-    ├── navbar.py            # Navigation bar component
-    ├── links.py             # Links section component
-    ├── footer.py            # Footer component
-    └── stats_card.py        # Statistics card component
+│   ├── __init__.py
+│   ├── data.py              # Data models and localStorage persistence
+│   └── simulation.py        # Cache simulation engine (direct-mapped & set-associative)
+├── components/
+│   ├── __init__.py
+│   ├── navbar.py            # Navigation bar component
+│   ├── footer.py            # Footer component
+│   ├── links.py             # Links section component
+│   ├── author_card.py       # Author information card
+│   ├── simulation_card.py   # Simulation display card
+│   ├── simulation_form.py   # Simulation creation form
+│   └── stats_card.py        # Statistics card component
+└── pages/
+    ├── __init__.py
+    ├── home.py              # Home/landing page
+    ├── about.py             # About page with project info
+    └── simulations.py       # Simulations page (create & view)
 ```
 
 ## Configuration
