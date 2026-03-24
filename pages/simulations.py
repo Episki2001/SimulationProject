@@ -49,28 +49,28 @@ def simulations_page():
         ui.separator()
         
         # --- Display simulations ---
-        async def handle_delete_all():
+        def handle_delete_all():
             """Handle delete all simulations with confirmation dialog."""
             simulations = get_all_simulations()
             if not simulations:
                 ui.notify("No simulations to delete", type="info")
                 return
             
-            result = await ui.dialog().props("persistent") \
-                .with_slots('<v-card>' + 
-                           '<v-card-title>Delete All Simulations?</v-card-title>' +
-                           f'<v-card-text>Are you sure you want to delete all {len(simulations)} simulation(s)? This action cannot be undone.</v-card-text>' +
-                           '<v-card-actions>' +
-                           '<v-spacer></v-spacer>' +
-                           '<v-btn flat @click="$emit(\'close\', false)">Cancel</v-btn>' +
-                           '<v-btn flat color="red" @click="$emit(\'close\', true)">Delete All</v-btn>' +
-                           '</v-card-actions>' +
-                           '</v-card>')
+            with ui.dialog() as dialog, ui.card():
+                ui.label("Delete All Simulations?").classes("text-lg font-bold")
+                ui.label(f"Are you sure you want to delete all {len(simulations)} simulation(s)? This action cannot be undone.").classes("text-gray-700 mb-4")
+                with ui.row().classes("gap-2 ml-auto"):
+                    ui.button("Cancel", on_click=dialog.close).props("flat")
+                    ui.button("Delete All", on_click=lambda: perform_delete_all(dialog), color="red").props("flat")
             
-            if result:
-                count = delete_all_simulations()
-                ui.notify(f"Deleted {count} simulation(s)", type="positive")
-                simulations_list.refresh()
+            dialog.open()
+        
+        def perform_delete_all(dialog):
+            """Perform the actual deletion."""
+            count = delete_all_simulations()
+            ui.notify(f"Deleted {count} simulation(s)", type="positive")
+            dialog.close()
+            simulations_list.refresh()
         
         with ui.row().classes("gap-2"):
             ui.label("Cache Simulations").classes("text-lg font-semibold text-green-700")
