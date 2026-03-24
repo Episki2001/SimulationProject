@@ -3,7 +3,7 @@ name = "csc512c-gamboa-garcia-simulation-project"
 version = "0.1.0"
 description = "Simulation Project For CSC512C for Group 3 (Garcia, Gamboa)"
 authors = [
-    "Kimberly Claire H. Gamboa <kimberly_gamboa@dlsu.edu.ph>",
+    "Kimberly Klaire H. Gamboa <kimberly_gamboa@dlsu.edu.ph>",
     "Andre Emmanuel S. Garcia <andre_emmanuel_garcia@dlsu.edu.ph>"
 ]
 readme = "README.md"

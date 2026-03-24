@@ -11,7 +11,6 @@ from nicegui import ui
 from components.navbar import navbar
 from components.hero import hero
 from components.footer import footer
-from components.feature_card import feature_card
 
 
 @ui.page("/")
@@ -48,23 +47,5 @@ def home_page():
         cta_label="View Cache Simulations",
         cta_target="/simulations",
     )
-
-    # Feature highlights
-    with ui.row().classes("justify-center gap-6 py-12 px-6 flex-wrap"):
-        feature_card(
-            icon="memory",
-            title="Cache Config",
-            description="Customize cache size, block size, associativity, and replacement policy."
-        )
-        feature_card(
-            icon="bar_chart",
-            title="Performance Metrics",
-            description="Track hit rate, hit count, miss count, and other cache statistics."
-        )
-        feature_card(
-            icon="group",
-            title="Team Ready",
-            description="Built for Group 3 — Garcia & Gamboa, CSC512C 2nd Term."
-        )
 
     footer()

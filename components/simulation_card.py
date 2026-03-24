@@ -1,11 +1,3 @@
-"""
-simulation_card.py
-------------------
-Component for displaying individual simulation details with results and visualizations.
-
-Displays simulation configuration, results, cache animation, and memory state.
-"""
-
 from datetime import datetime
 from nicegui import ui
 from backend.data import delete_simulation
@@ -21,18 +13,6 @@ STATUS_COLORS = {
 def simulation_card(sim):
     """
     Display a complete simulation card with all details, results, and visualizations.
-    
-    Args:
-        sim: Simulation object containing all simulation data and results
-    
-    Displays:
-        - Header: ID, name, status
-        - Configuration: type, memory space, cache size, block size, timings, test pattern
-        - Custom pattern details (if applicable)
-        - Results: hits, misses, rates, timing metrics (if completed)
-        - Cache Animation: Step-by-step cache visualization with play controls
-        - Final Cache Memory: Visual representation of final cache state
-        - Footer: Created date and delete button
     """
     with ui.card().classes("p-4 rounded-lg shadow-sm w-full"):
         # Header row: ID, Name, Status
@@ -357,9 +337,9 @@ def _display_direct_mapped_cache(sim_data, cache_state, block_ages, accessed, ac
                 if sim_data.associativity == 8:
                     display_text += f" Set{block_set}"
                 
-                ui.input(value=display_text).props("readonly dense outlined").classes(f"text-center {bg_class} font-semibold").style("max-width: 120px; font-size: 0.75rem;")
+                ui.input(value=display_text).props("readonly dense outlined").classes(f"text-center {bg_class} font-semibold").style("max-width: 150px; font-size: 0.75rem;")
             else:
-                ui.input(value=f"[{i}] —").props("readonly dense outlined").classes("text-center bg-white text-gray-400").style("max-width: 120px; font-size: 0.75rem;")
+                ui.input(value=f"[{i}] —").props("readonly dense outlined").classes("text-center bg-white text-gray-400").style("max-width: 150px; font-size: 0.75rem;")
 
 
 def _display_set_associative_cache(sim_data, cache_state, block_ages, accessed, accessed_set, snapshot, num_sets):
@@ -383,10 +363,11 @@ def _display_set_associative_cache(sim_data, cache_state, block_ages, accessed, 
                         else:
                             bg_class = "bg-blue-100"
                         
-                        display_text = f"[{block_idx}] B{block} age:{age}"
-                        ui.input(value=display_text).props("readonly dense outlined").classes(f"text-center {bg_class} font-semibold").style("max-width: 150px; font-size: 0.75rem;")
+                        with ui.card().classes(f"{bg_class} p-2").style("min-width: 100px; max-width: 120px;"):
+                            ui.label(f"[{block_idx}] B{block}").classes("text-center font-semibold text-xs")
+                            ui.label(f"age: {age}").classes("text-center text-xs")
                     else:
-                        ui.input(value=f"[{block_idx}] —").props("readonly dense outlined").classes("text-center bg-white text-gray-400").style("max-width: 150px; font-size: 0.75rem;")
+                        ui.input(value=f"[{block_idx}] —").props("readonly dense outlined").classes("text-center bg-white text-gray-400").style("max-width: 120px; font-size: 0.75rem;")
 
 
 def _display_set_organization(cache_state, is_direct_mapped, num_sets, accessed_set):

@@ -1,9 +1,3 @@
-"""
-components/hero.py
-------------------
-Landing-page hero section component.
-"""
-
 from nicegui import ui
 
 

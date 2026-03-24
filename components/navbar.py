@@ -1,9 +1,3 @@
-"""
-components/navbar.py
---------------------
-Reusable top navigation bar component.
-"""
-
 from nicegui import ui
 
 

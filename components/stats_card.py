@@ -1,10 +1,3 @@
-"""
-components/stats_card.py
-------------------------
-A small card that shows a single stat (label + value).
-Used on the Simulations dashboard.
-"""
-
 from nicegui import ui
 
 

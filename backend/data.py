@@ -6,7 +6,7 @@ Stores cache simulations with parameters like size, block size, and replacement 
 Persists to browser localStorage via NiceGUI. Each user has their own storage.
 
 Authors:
-    - Kimberly Claire H. Gamboa
+    - Kimberly Klaire H. Gamboa
     - Andre Emmanuel S. Garcia
 """
 
@@ -31,7 +31,7 @@ class CacheSimulation:
     cache_blocks: int    # number of cache blocks (min 4, power-of-2)
     block_size: int      # cache line size in words (min 2, power-of-2)
     associativity: int   # 1=direct-mapped, N=N-way set-associative
-    replacement_policy: str  # "LRU" or "FIFO"
+    replacement_policy: str 
     test_pattern: str    # "sequential", "mid_repeat", "random", or "custom"
     custom_pattern: list[int] = field(default_factory=list)  # user-defined access pattern
     random_length: int = 64  # number of accesses for random pattern
@@ -67,21 +67,20 @@ class CacheSimulation:
         return cls(**data)
 
 
-# Storage setup - now using browser localStorage via NiceGUI
+# Storage using browser localStorage via NiceGUI
 from nicegui import app
 
 STORAGE_KEY = "cache_simulations"
 
 
 def _load_store() -> list[CacheSimulation]:
-    """Load cache simulations from browser storage, or return empty list if none exist."""
+    """Load cache simulations from browser storage."""
     try:
         data = app.storage.user.get(STORAGE_KEY, [])
         if data:
             return [CacheSimulation.from_dict(item) for item in data]
     except (KeyError, TypeError, AttributeError):
         pass
-    # Default: empty store (no seed data)
     return []
 
 
@@ -90,26 +89,19 @@ def _save_store(store: list[CacheSimulation]) -> None:
     app.storage.user[STORAGE_KEY] = [asdict(item) for item in store]
 
 
-# In-memory store (persisted to browser localStorage)
-_store: list[CacheSimulation] = []
-
-
 # ---------------------------------------------------------------------------
-# CRUD helpers
+# CRUD operations
 # ---------------------------------------------------------------------------
 
 def get_all_simulations() -> list[CacheSimulation]:
-    """Return every cache simulation in the store."""
-    global _store
-    _store = _load_store()  # Load from browser storage
-    return list(_store)
+    """Return all cache simulations."""
+    return _load_store()
 
 
 def get_simulation(sim_id: int) -> CacheSimulation | None:
-    """Return a single cache simulation by id, or None."""
-    global _store
-    _store = _load_store()  # Load from browser storage
-    return next((s for s in _store if s.id == sim_id), None)
+    """Return a cache simulation by ID, or None if not found."""
+    store = _load_store()
+    return next((s for s in store if s.id == sim_id), None)
 
 
 def add_simulation(
@@ -124,10 +116,9 @@ def add_simulation(
     cache_access_time: int = 1,
     memory_access_time: int = 10
 ) -> CacheSimulation:
-    """Create and automatically run a cache simulation per spec."""
-    global _store
-    _store = _load_store()  # Load from browser storage
-    new_id = max((s.id for s in _store), default=0) + 1
+    """Create and run a cache simulation."""
+    store = _load_store()
+    new_id = max((s.id for s in store), default=0) + 1
     sim = CacheSimulation(
         new_id, name, "running",
         cache_blocks=cache_blocks,
@@ -140,34 +131,30 @@ def add_simulation(
         cache_access_time=cache_access_time,
         memory_access_time=memory_access_time
     )
-    _store.append(sim)
-    _save_store(_store)
+    store.append(sim)
+    _save_store(store)
     
-    # Import here to avoid circular dependency
     from backend.simulation import run_simulation
     run_simulation(new_id)
     
-    # Return the updated simulation from the store (not the local copy)
     return get_simulation(new_id)
 
 
 def delete_simulation(sim_id: int) -> bool:
-    """Remove a cache simulation; returns True if it existed."""
-    global _store
-    _store = _load_store()  # Load from browser storage
-    before = len(_store)
-    _store = [s for s in _store if s.id != sim_id]
-    if len(_store) < before:
-        _save_store(_store)
+    """Delete a cache simulation by ID. Returns True if deleted."""
+    store = _load_store()
+    before = len(store)
+    store = [s for s in store if s.id != sim_id]
+    if len(store) < before:
+        _save_store(store)
         return True
     return False
 
 
 def get_stats() -> dict:
-    """Aggregate counts by status."""
-    global _store
-    _store = _load_store()  # Load from browser storage
+    """Get simulation counts by status."""
+    store = _load_store()
     counts: dict[str, int] = {}
-    for sim in _store:
+    for sim in store:
         counts[sim.status] = counts.get(sim.status, 0) + 1
     return counts

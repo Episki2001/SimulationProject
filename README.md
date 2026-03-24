@@ -2,7 +2,7 @@
 Repository for CSC512C Simulation Project
 
 ## Authors
-- **Kimberly Claire H. Gamboa**
+- **Kimberly Klaire H. Gamboa**
 - **Andre Emmanuel S. Garcia**
 
 ## Description
@@ -165,5 +165,5 @@ This project is developed for academic purposes as part of CSC512C coursework.
 
 ## Support
 For issues or questions, please contact:
-- Kimberly Claire H. Gamboa: kimberly_gamboa@dlsu.edu.ph
+- Kimberly Klaire H. Gamboa: kimberly_gamboa@dlsu.edu.ph
 - Andre Emmanuel S. Garcia: andre_emmanuel_garcia@dlsu.edu.ph

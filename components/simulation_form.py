@@ -1,11 +1,4 @@
-"""
-simulation_form.py
-------------------
-Form component for creating new cache simulations.
-
-Provides input fields for configuring cache parameters and test patterns.
-"""
-
+import math
 from datetime import datetime
 from nicegui import ui
 from backend.data import add_simulation
@@ -14,17 +7,6 @@ from backend.data import add_simulation
 def simulation_form(on_success=None):
     """
     Display the simulation creation form with all configuration options.
-        Args:
-        on_success: Optional callback function to call after successful simulation creation.
-                   Typically used to refresh the simulations list.
-        Includes:
-        - Simulation name input
-        - Simulation type selector (Direct Mapped / 8-Way LRU)
-        - Cache configuration (blocks, block size)
-        - Timing configuration (cache/memory access times)
-        - Test pattern selection
-        - Custom pattern input (conditional)
-        - Submit button with validation
     """
     ui.label("Add New Cache Simulation").classes("text-lg font-semibold text-green-700")
     
@@ -46,18 +28,18 @@ def simulation_form(on_success=None):
         with ui.card().classes("p-3 bg-blue-50 border-l-4 border-blue-500"):
             ui.label("Memory Configuration (CSC512C Spec)").classes("font-semibold text-blue-900 text-sm mb-1")
             with ui.row().classes("gap-6 text-xs text-blue-800"):
-                ui.label("📦 Total Memory Space: 1024 blocks (0-1023) — Fixed")
+                ui.label("📦 Total Memory Space: 1024 blocks ")
                 ui.label("💾 Cache Size: Configurable below (holds subset of memory)")
         
         # Cache configuration (per CSC512C spec)
         with ui.row().classes("w-full gap-4"):
-            cache_blocks_input = ui.number(label="Cache Blocks (power-of-2, min 4)", value=4, min=4, max=32, step=1).classes("flex-1")
-            block_size_input = ui.number(label="Block Size (words, power-of-2, min 2)", value=2, min=2, max=16, step=1).classes("flex-1")
+            cache_blocks_input = ui.number(label="Cache Blocks (power-of-2, min 4, max 512)", value=4).classes("flex-1")
+            block_size_input = ui.number(label="Block Size in words (power-of-2, min 2)", value=2).classes("flex-1")
         
         # Timing configuration
         with ui.row().classes("w-full gap-4"):
-            cache_access_time_input = ui.number(label="Cache Access Time (ns per block)", value=1, min=1, max=100, step=1).classes("flex-1")
-            memory_access_time_input = ui.number(label="Memory Access Time (ns per word)", value=10, min=1, max=1000, step=1).classes("flex-1")
+            cache_access_time_input = ui.number(label="Cache Access Time (ns per block)", value=1).classes("flex-1")
+            memory_access_time_input = ui.number(label="Memory Access Time (ns per word)", value=10).classes("flex-1")
         
         # Test pattern selection
         pattern_select = ui.select(
@@ -76,10 +58,7 @@ def simulation_form(on_success=None):
         # Random pattern length input (shown only when random is selected)
         random_length_input = ui.number(
             label="Random Pattern Length (number of accesses)",
-            value=64,
-            min=1,
-            max=10000,
-            step=1
+            value=64
         ).classes("w-full")
         random_length_input.set_visibility(False)
         
@@ -94,7 +73,9 @@ def simulation_form(on_success=None):
         
         def is_power_of_2(n: int) -> bool:
             """Check if a number is a power of 2."""
-            return n > 0 and (n & (n - 1)) == 0
+            if n <= 0:
+                return False
+            return math.log2(n) % 1 == 0
         
         def on_add():
             # Auto-generate simulation name if not provided
@@ -111,35 +92,57 @@ def simulation_form(on_success=None):
                 
                 timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 name = f"{sim_type_text} - {timestamp}"
-                ui.notify(f"Auto-generated name: {name}", type="info")
             
             # Validate cache configuration
-            cache_blocks = int(cache_blocks_input.value)
-            block_size = int(block_size_input.value)
+            try:
+                cache_blocks = int(cache_blocks_input.value)
+            except (ValueError, TypeError):
+                ui.notify("Cache blocks must be a valid number.", type="warning")
+                return
+            
+            try:
+                block_size = int(block_size_input.value)
+            except (ValueError, TypeError):
+                ui.notify("Block size must be a valid number.", type="warning")
+                return
             
             # Validate cache blocks is power of 2
             if not is_power_of_2(cache_blocks):
-                ui.notify(f"Cache blocks must be a power of 2 (e.g., 4, 8, 16, 32). Got: {cache_blocks}", type="warning")
+                ui.notify(f"Cache blocks must be a power of 2 (e.g., 4, 8, 16, 32, 64...).", type="warning")
+                return
+            
+            # Validate cache blocks minimum
+            if cache_blocks < 4:
+                ui.notify(f"Cache blocks must be at least 4. Got: {cache_blocks}", type="warning")
+                return
+            
+            # Validate cache blocks maximum
+            if cache_blocks > 512:
+                ui.notify(f"Cache blocks must be at most 512. Got: {cache_blocks}", type="warning")
                 return
             
             # Validate block size is power of 2
             if not is_power_of_2(block_size):
-                ui.notify(f"Block size must be a power of 2 (e.g., 2, 4, 8, 16). Got: {block_size}", type="warning")
+                ui.notify(f"Block size must be a power of 2 (e.g., 2, 4, 8, 16, 32...).", type="warning")
                 return
             
-            # Validate cache blocks within range
-            if cache_blocks < 4 or cache_blocks > 32:
-                ui.notify(f"Cache blocks must be between 4 and 32. Got: {cache_blocks}", type="warning")
-                return
-            
-            # Validate block size within range
-            if block_size < 2 or block_size > 16:
-                ui.notify(f"Block size must be between 2 and 16 words. Got: {block_size}", type="warning")
+            # Validate block size minimum
+            if block_size < 2:
+                ui.notify(f"Block size must be at least 2. Got: {block_size}", type="warning")
                 return
             
             # Validate timing parameters
-            cache_access_time = int(cache_access_time_input.value)
-            memory_access_time = int(memory_access_time_input.value)
+            try:
+                cache_access_time = int(cache_access_time_input.value)
+            except (ValueError, TypeError):
+                ui.notify("Cache access time must be a valid number.", type="warning")
+                return
+            
+            try:
+                memory_access_time = int(memory_access_time_input.value)
+            except (ValueError, TypeError):
+                ui.notify("Memory access time must be a valid number.", type="warning")
+                return
             
             if cache_access_time < 1 or cache_access_time > 100:
                 ui.notify(f"Cache access time must be between 1 and 100 ns. Got: {cache_access_time}", type="warning")
@@ -153,7 +156,7 @@ def simulation_form(on_success=None):
             sim_type = sim_type_select.value
             if sim_type == "direct_mapped":
                 associativity = 1
-                replacement_policy = "FIFO"  # Doesn't matter for direct-mapped
+                replacement_policy = "LRU"  # Not used for direct-mapped, but set for consistency
             elif sim_type == "8way_lru":
                 associativity = 8
                 replacement_policy = "LRU"
@@ -182,9 +185,14 @@ def simulation_form(on_success=None):
                     return
             
             # Get random pattern length
-            random_length = int(random_length_input.value) if pattern_select.value == "random" else 64
-            if random_length < 1 or random_length > 10000:
-                ui.notify("Random pattern length must be between 1 and 10000.", type="warning")
+            try:
+                random_length = int(random_length_input.value) if pattern_select.value == "random" else 64
+            except (ValueError, TypeError):
+                ui.notify("Random pattern length must be a valid number.", type="warning")
+                return
+            
+            if random_length < 1:
+                ui.notify("Random pattern length must be at least 1.", type="warning")
                 return
             
             try:

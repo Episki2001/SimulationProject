@@ -29,7 +29,7 @@ def about_page():
             * Capabilities: various configurations, replacement policies, performance metrics
         - Authors section:
             * Team members with profile icons
-            * Names: Kimberly Claire H. Gamboa, Andre Emmanuel S. Garcia
+            * Names: Kimberly Klaire H. Gamboa, Andre Emmanuel S. Garcia
             * Team designation: Group 3 · CSC512C
         - Footer with additional information
     
@@ -57,7 +57,7 @@ def about_page():
         # Authors section
         ui.label("Authors").classes("text-xl font-semibold text-green-800 mt-8 mb-2")
         with ui.row().classes("gap-6 mt-4"):
-            author_card("Kimberly Claire H. Gamboa")
+            author_card("Kimberly Klaire H. Gamboa")
             author_card("Andre Emmanuel S. Garcia")
 
     footer()

@@ -4,7 +4,7 @@ author_card.py
 Reusable author card component for displaying team member information.
 
 Usage:
-    author_card("Kimberly Claire H. Gamboa")
+    author_card("Kimberly Klaire H. Gamboa")
 """
 
 from nicegui import ui
