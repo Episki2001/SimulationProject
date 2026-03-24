@@ -311,7 +311,6 @@ def run_simulation(sim_id: int) -> bool:
     sim.trace_log = simulator.access_trace
     sim.final_cache_memory = simulator.cache_array.copy() if simulator.is_direct_mapped else [s.copy() for s in simulator.cache_array]
     sim.cache_snapshots = simulator.cache_snapshots
-    sim.status = "done"
 
     # Persist results
     store = _load_store()

@@ -3,11 +3,91 @@ from nicegui import ui
 from backend.data import delete_simulation
 
 
-STATUS_COLORS = {
-    "done":    "text-green-600",
-    "running": "text-yellow-600",
-    "error":   "text-red-600",
-}
+def _generate_trace_log_file(sim):
+    """Generate trace log content as a text file."""
+    content = "=" * 80 + "\n"
+    content += "CACHE SIMULATION TRACE LOG\n"
+    content += "=" * 80 + "\n\n"
+    
+    # Header information
+    content += f"Simulation Name: {sim.name}\n"
+    content += f"Simulation ID:   #{sim.id}\n"
+    content += f"Created:         {sim.created_at}\n"
+    content += "\n"
+    
+    # Configuration
+    content += "-" * 80 + "\n"
+    content += "CONFIGURATION\n"
+    content += "-" * 80 + "\n"
+    
+    if sim.associativity == 1:
+        sim_type_text = "Direct Mapped"
+    elif sim.associativity == 8 and sim.replacement_policy == "LRU":
+        sim_type_text = "8-Way Set Associative + LRU"
+    else:
+        sim_type_text = f"{sim.associativity}-way + {sim.replacement_policy}"
+    
+    content += f"Simulation Type:     {sim_type_text}\n"
+    content += f"Memory Space:        1024 blocks\n"
+    content += f"Cache Size:          {sim.cache_blocks} blocks\n"
+    content += f"Block Size:          {sim.block_size} words\n"
+    content += f"Cache Access Time:   {sim.cache_access_time} ns/block\n"
+    content += f"Memory Access Time:  {sim.memory_access_time} ns/word\n"
+    
+    # Test pattern
+    if sim.test_pattern == "custom" and sim.custom_pattern:
+        pattern_text = f"custom ({len(sim.custom_pattern)} accesses)"
+    elif sim.test_pattern == "sequential":
+        pattern_text = f"sequential ({4 * sim.cache_blocks} accesses)"
+    elif sim.test_pattern == "mid_repeat":
+        n = sim.cache_blocks
+        base_length = 1 + 2 * (n - 1) + n
+        pattern_text = f"mid_repeat ({2 * base_length} accesses)"
+    elif sim.test_pattern == "random":
+        random_len = getattr(sim, 'random_length', 64)
+        pattern_text = f"random ({random_len} accesses)"
+    else:
+        pattern_text = sim.test_pattern
+    
+    content += f"Test Pattern:        {pattern_text}\n"
+    
+    # Custom pattern details
+    if sim.test_pattern == "custom" and sim.custom_pattern:
+        content += f"\nCustom Pattern Access Sequence:\n"
+        # Format in rows of 20 numbers
+        for i in range(0, len(sim.custom_pattern), 20):
+            chunk = sim.custom_pattern[i:i+20]
+            content += "  " + ", ".join(map(str, chunk)) + "\n"
+    
+    content += "\n"
+    
+    # Results
+    if sim.total_accesses > 0:
+        content += "-" * 80 + "\n"
+        content += "RESULTS\n"
+        content += "-" * 80 + "\n"
+        content += f"Total Accesses:      {sim.total_accesses}\n"
+        content += f"Cache Hits:          {sim.cache_hits}\n"
+        content += f"Cache Misses:        {sim.cache_misses}\n"
+        content += f"Hit Rate:            {sim.hit_rate * 100:.2f}%\n"
+        content += f"Miss Rate:           {sim.miss_rate * 100:.2f}%\n"
+        content += f"Miss Penalty:        {sim.miss_penalty} ns\n"
+        content += f"Avg Access Time:     {sim.avg_memory_access_time:.2f} ns\n"
+        content += f"Total Access Time:   {sim.total_memory_access_time:.0f} ns\n"
+        content += "\n"
+    
+    # Trace log
+    content += "-" * 80 + "\n"
+    content += "TRACE LOG\n"
+    content += "-" * 80 + "\n"
+    for i, trace_entry in enumerate(sim.trace_log, 1):
+        content += f"{i:4d}. {trace_entry}\n"
+    
+    content += "\n" + "=" * 80 + "\n"
+    content += "END OF TRACE LOG\n"
+    content += "=" * 80 + "\n"
+    
+    return content.encode('utf-8')
 
 
 def simulation_card(sim):
@@ -15,14 +95,10 @@ def simulation_card(sim):
     Display a complete simulation card with all details, results, and visualizations.
     """
     with ui.card().classes("p-4 rounded-lg shadow-sm w-full"):
-        # Header row: ID, Name, Status
+        # Header row: ID and Name
         with ui.row().classes("items-center gap-4 mb-3 pb-3 border-b border-gray-200"):
             ui.label(f"#{sim.id}").classes("font-mono text-gray-400 w-8")
             ui.label(sim.name).classes("font-bold text-gray-800 flex-1 text-base")
-            ui.label(sim.status.upper()).classes(
-                f"text-xs font-bold px-2 py-1 rounded "
-                f"{STATUS_COLORS.get(sim.status, 'text-gray-500')}"
-            )
         
         # Config row: Cache parameters (per CSC512C spec)
         with ui.row().classes("gap-6 items-start mb-3 text-sm flex-wrap"):
@@ -75,8 +151,8 @@ def simulation_card(sim):
                     pattern_str += f"... and {len(sim.custom_pattern) - 50} more"
                 ui.label(f"Access sequence: {pattern_str}").classes("text-xs font-mono text-gray-700")
         
-        # Results row: Hit/Miss stats + timing (only if simulation ran)
-        if sim.status == "done" and sim.total_accesses > 0:
+        # Results row: Hit/Miss stats + timing
+        if sim.total_accesses > 0:
             with ui.row().classes("gap-6 items-start text-sm flex-wrap"):
                 with ui.column().classes("gap-1"):
                     ui.label("Accesses:").classes("text-xs font-semibold text-gray-600")
@@ -108,98 +184,12 @@ def simulation_card(sim):
             # Text-based Trace Log
             with ui.expansion("Trace Log", icon="article").classes("w-full mt-3"):
                 if sim.trace_log and len(sim.trace_log) > 0:
-                    # Download button for trace log
-                    def generate_trace_log_file():
-                        """Generate trace log content as a text file."""
-                        content = "=" * 80 + "\n"
-                        content += "CACHE SIMULATION TRACE LOG\n"
-                        content += "=" * 80 + "\n\n"
-                        
-                        # Header information
-                        content += f"Simulation Name: {sim.name}\n"
-                        content += f"Created:         {sim.created_at}\n"
-                        content += "\n"
-                        
-                        # Configuration
-                        content += "-" * 80 + "\n"
-                        content += "CONFIGURATION\n"
-                        content += "-" * 80 + "\n"
-                        
-                        if sim.associativity == 1:
-                            sim_type_text = "Direct Mapped"
-                        elif sim.associativity == 8 and sim.replacement_policy == "LRU":
-                            sim_type_text = "8-Way Set Associative + LRU"
-                        else:
-                            sim_type_text = f"{sim.associativity}-way + {sim.replacement_policy}"
-                        
-                        content += f"Simulation Type:     {sim_type_text}\n"
-                        content += f"Memory Space:        1024 blocks\n"
-                        content += f"Cache Size:          {sim.cache_blocks} blocks\n"
-                        content += f"Block Size:          {sim.block_size} words\n"
-                        content += f"Cache Access Time:   {sim.cache_access_time} ns/block\n"
-                        content += f"Memory Access Time:  {sim.memory_access_time} ns/word\n"
-                        
-                        # Test pattern
-                        if sim.test_pattern == "custom" and sim.custom_pattern:
-                            pattern_text = f"custom ({len(sim.custom_pattern)} accesses)"
-                        elif sim.test_pattern == "sequential":
-                            pattern_text = f"sequential ({4 * sim.cache_blocks} accesses)"
-                        elif sim.test_pattern == "mid_repeat":
-                            n = sim.cache_blocks
-                            base_length = 1 + 2 * (n - 1) + n
-                            pattern_text = f"mid_repeat ({2 * base_length} accesses)"
-                        elif sim.test_pattern == "random":
-                            random_len = getattr(sim, 'random_length', 64)
-                            pattern_text = f"random ({random_len} accesses)"
-                        else:
-                            pattern_text = sim.test_pattern
-                        
-                        content += f"Test Pattern:        {pattern_text}\n"
-                        
-                        # Custom pattern details
-                        if sim.test_pattern == "custom" and sim.custom_pattern:
-                            content += f"\nCustom Pattern Access Sequence:\n"
-                            # Format in rows of 20 numbers
-                            for i in range(0, len(sim.custom_pattern), 20):
-                                chunk = sim.custom_pattern[i:i+20]
-                                content += "  " + ", ".join(map(str, chunk)) + "\n"
-                        
-                        content += "\n"
-                        
-                        # Results
-                        if sim.status == "done" and sim.total_accesses > 0:
-                            content += "-" * 80 + "\n"
-                            content += "RESULTS\n"
-                            content += "-" * 80 + "\n"
-                            content += f"Total Accesses:      {sim.total_accesses}\n"
-                            content += f"Cache Hits:          {sim.cache_hits}\n"
-                            content += f"Cache Misses:        {sim.cache_misses}\n"
-                            content += f"Hit Rate:            {sim.hit_rate * 100:.2f}%\n"
-                            content += f"Miss Rate:           {sim.miss_rate * 100:.2f}%\n"
-                            content += f"Miss Penalty:        {sim.miss_penalty} ns\n"
-                            content += f"Avg Access Time:     {sim.avg_memory_access_time:.2f} ns\n"
-                            content += f"Total Access Time:   {sim.total_memory_access_time:.0f} ns\n"
-                            content += "\n"
-                        
-                        # Trace log
-                        content += "-" * 80 + "\n"
-                        content += "TRACE LOG\n"
-                        content += "-" * 80 + "\n"
-                        for i, trace_entry in enumerate(sim.trace_log, 1):
-                            content += f"{i:4d}. {trace_entry}\n"
-                        
-                        content += "\n" + "=" * 80 + "\n"
-                        content += "END OF TRACE LOG\n"
-                        content += "=" * 80 + "\n"
-                        
-                        return content.encode('utf-8')
-                    
                     # Create filename based on simulation name
                     safe_name = sim.name.replace(' ', '_').replace('/', '-').replace('\\', '-')
                     filename = f"trace_log_{safe_name}_id{sim.id}.txt"
                     
                     ui.button("Download Trace Log", icon="download", 
-                             on_click=lambda: ui.download(generate_trace_log_file(), filename)) \
+                             on_click=lambda: ui.download(_generate_trace_log_file(sim), filename)) \
                         .props("flat size=sm color=blue") \
                         .classes("mb-2")
                     
@@ -235,169 +225,175 @@ def simulation_card(sim):
             created_dt = datetime.fromisoformat(sim.created_at)
             ui.label(created_dt.strftime("%Y-%m-%d %H:%M")).classes("text-gray-400")
             
-            def make_delete(sid: int):
-                def _delete():
-                    delete_simulation(sid)
-                    ui.notify("Simulation deleted.", type="info")
-                    ui.navigate.reload()
-                return _delete
-
             ui.button(
                 icon="delete",
-                on_click=make_delete(sim.id),
+                on_click=lambda sid=sim.id: (delete_simulation(sid), ui.notify("Simulation deleted.", type="info"), ui.navigate.reload()),
             ).classes("text-red-400 hover:text-red-600").props("flat round")
 
 
-def _create_animation_viewer(sim_data):
-    """Create interactive cache animation viewer with play controls and speed adjustment."""
+class CacheAnimationViewer:
+    """Interactive cache animation viewer with play controls and speed adjustment."""
+    
+    def __init__(self, sim_data):
+        self.sim_data = sim_data
+        self.step = 0
+        self.playing = False
+        self.speeds = [0.25, 0.5, 1, 2, 4]  # Speed multipliers
+        self.speed = 1  # Current speed (1x = normal)
+        self.base_interval = 1.0  # Base interval in seconds
+        self.interval = self.base_interval / self.speed
+        self.timer = ui.timer(self.interval, self._auto_advance, active=False)
+    
     @ui.refreshable
-    def animation_display():
-        step_idx = animation_display.step
-        snapshot = sim_data.cache_snapshots[step_idx]
+    def display(self):
+        """Render the animation display with current state."""
+        snapshot = self.sim_data.cache_snapshots[self.step]
         
         with ui.column().classes("w-full gap-3"):
             # Animation controls - Row 1: Play/Stop and navigation
             with ui.row().classes("items-center gap-3 flex-wrap"):
-                ui.label(f"Step: {step_idx + 1} / {len(sim_data.cache_snapshots)}").classes("text-sm font-semibold")
+                ui.label(f"Step: {self.step + 1} / {len(self.sim_data.cache_snapshots)}").classes("text-sm font-semibold")
                 
-                if animation_display.playing:
-                    ui.button("⏸ Stop", on_click=lambda: stop_animation()).props("size=sm color=orange")
+                if self.playing:
+                    ui.button("⏸ Stop", on_click=self.stop_animation).props("size=sm color=orange")
                 else:
-                    ui.button("▶ Play", on_click=lambda: play_animation()).props("size=sm color=green")
+                    ui.button("▶ Play", on_click=self.play_animation).props("size=sm color=green")
                 
-                ui.button("◀ Prev", on_click=lambda: go_prev()).props("size=sm color=green flat")
-                ui.button("Next ▶", on_click=lambda: go_next()).props("size=sm color=green flat")
-                ui.button("⟲ Reset", on_click=lambda: reset()).props("size=sm color=green flat")
+                ui.button("◀ Prev", on_click=self.go_prev).props("size=sm color=green flat")
+                ui.button("Next ▶", on_click=self.go_next).props("size=sm color=green flat")
+                ui.button("⟲ Reset", on_click=self.reset).props("size=sm color=green flat")
             
             # Animation controls - Row 2: Speed controls
             with ui.row().classes("items-center gap-2 flex-wrap"):
                 ui.label("Speed:").classes("text-xs font-semibold text-gray-600")
-                ui.button("🐢 Slow", on_click=lambda: decrease_speed()).props("size=sm color=blue flat")
-                ui.label(f"{animation_display.speed}x").classes("text-sm font-semibold text-blue-700 px-2")
-                ui.button("🐇 Fast", on_click=lambda: increase_speed()).props("size=sm color=blue flat")
-                ui.label(f"({animation_display.interval:.2f}s/step)").classes("text-xs text-gray-500")
+                ui.button("🐢 Slow", on_click=self.decrease_speed).props("size=sm color=blue flat")
+                ui.label(f"{self.speed}x").classes("text-sm font-semibold text-blue-700 px-2")
+                ui.button("🐇 Fast", on_click=self.increase_speed).props("size=sm color=blue flat")
+                ui.label(f"({self.interval:.2f}s/step)").classes("text-xs text-gray-500")
             
             # Calculate set information
-            num_sets = sim_data.cache_blocks // sim_data.associativity if sim_data.associativity > 0 else 1
+            num_sets = self.sim_data.cache_blocks // self.sim_data.associativity if self.sim_data.associativity > 0 else 1
             accessed = snapshot["accessed_block"]
             accessed_set = accessed % num_sets if num_sets > 0 else 0
             
             # Access info
             if snapshot["is_hit"]:
-                if sim_data.associativity == 8:
+                if self.sim_data.associativity == 8:
                     ui.label(f"✓ ACCESS Block {accessed} (Set {accessed_set}) - HIT!").classes("text-sm font-semibold text-green-700")
                 else:
                     ui.label(f"✓ ACCESS Block {accessed} - HIT!").classes("text-sm font-semibold text-green-700")
             else:
                 if snapshot["evicted_block"] is not None:
-                    if sim_data.associativity == 8:
+                    if self.sim_data.associativity == 8:
                         evicted_set = snapshot["evicted_block"] % num_sets if num_sets > 0 else 0
                         ui.label(f"✗ ACCESS Block {accessed} (Set {accessed_set}) - MISS (evicted Block {snapshot['evicted_block']} from Set {evicted_set})").classes("text-sm font-semibold text-red-700")
                     else:
                         ui.label(f"✗ ACCESS Block {accessed} - MISS (evicted Block {snapshot['evicted_block']})").classes("text-sm font-semibold text-red-700")
                 else:
-                    if sim_data.associativity == 8:
+                    if self.sim_data.associativity == 8:
                         ui.label(f"✗ ACCESS Block {accessed} (Set {accessed_set}) - MISS (loaded)").classes("text-sm font-semibold text-orange-700")
                     else:
                         ui.label(f"✗ ACCESS Block {accessed} - MISS (loaded)").classes("text-sm font-semibold text-orange-700")
             
             # Cache visualization
-            _display_cache_state(sim_data, snapshot, accessed, accessed_set, num_sets)
+            _display_cache_state(self.sim_data, snapshot, accessed, accessed_set, num_sets)
             
             ui.label(f"Stats: Hits: {snapshot['hits']} | Misses: {snapshot['misses']}").classes("text-sm mt-3 text-gray-700")
     
-    def go_prev():
-        if animation_display.playing:
-            animation_display.timer.active = False
-            animation_display.playing = False
-        animation_display.step = max(0, animation_display.step - 1)
-        animation_display.refresh()
+    def go_prev(self):
+        """Navigate to previous step."""
+        if self.playing:
+            self.timer.active = False
+            self.playing = False
+        self.step = max(0, self.step - 1)
+        self.display.refresh()
     
-    def go_next():
-        if animation_display.playing:
-            animation_display.timer.active = False
-            animation_display.playing = False
-        animation_display.step = min(len(sim_data.cache_snapshots) - 1, animation_display.step + 1)
-        animation_display.refresh()
+    def go_next(self):
+        """Navigate to next step."""
+        if self.playing:
+            self.timer.active = False
+            self.playing = False
+        self.step = min(len(self.sim_data.cache_snapshots) - 1, self.step + 1)
+        self.display.refresh()
     
-    def reset():
-        animation_display.step = 0
-        if animation_display.playing:
-            animation_display.timer.active = False
-            animation_display.playing = False
-        animation_display.refresh()
+    def reset(self):
+        """Reset to first step."""
+        self.step = 0
+        if self.playing:
+            self.timer.active = False
+            self.playing = False
+        self.display.refresh()
     
-    def auto_advance():
-        if animation_display.step < len(sim_data.cache_snapshots) - 1:
-            animation_display.step += 1
-            animation_display.refresh()
+    def _auto_advance(self):
+        """Auto-advance to next step during playback."""
+        if self.step < len(self.sim_data.cache_snapshots) - 1:
+            self.step += 1
+            self.display.refresh()
         else:
             # Reached end - stop animation
-            animation_display.timer.active = False
-            animation_display.playing = False
-            ui.timer(0.05, lambda: animation_display.refresh(), once=True)
+            self.timer.active = False
+            self.playing = False
+            ui.timer(0.05, lambda: self.display.refresh(), once=True)
     
-    def play_animation():
-        if not animation_display.playing:
-            animation_display.playing = True
-            animation_display.timer.interval = animation_display.interval  # Ensure interval is set
-            animation_display.timer.active = True
-            animation_display.refresh()
+    def play_animation(self):
+        """Start animation playback."""
+        if not self.playing:
+            self.playing = True
+            self.timer.interval = self.interval  # Ensure interval is set
+            self.timer.active = True
+            self.display.refresh()
     
-    def stop_animation():
+    def stop_animation(self):
+        """Stop animation playback."""
         # Always stop the timer first, regardless of state
-        animation_display.timer.active = False
-        animation_display.playing = False
+        self.timer.active = False
+        self.playing = False
         # Use a deferred refresh to avoid race conditions with button clicks
-        ui.timer(0.05, lambda: animation_display.refresh(), once=True)
+        ui.timer(0.05, lambda: self.display.refresh(), once=True)
     
-    def increase_speed():
+    def increase_speed(self):
         """Increase animation speed (decrease interval)."""
-        current_speed_idx = animation_display.speeds.index(animation_display.speed)
-        if current_speed_idx < len(animation_display.speeds) - 1:
-            animation_display.speed = animation_display.speeds[current_speed_idx + 1]
-            animation_display.interval = animation_display.base_interval / animation_display.speed
+        current_speed_idx = self.speeds.index(self.speed)
+        if current_speed_idx < len(self.speeds) - 1:
+            self.speed = self.speeds[current_speed_idx + 1]
+            self.interval = self.base_interval / self.speed
             
             # If playing, restart timer with new interval
-            was_playing = animation_display.playing
+            was_playing = self.playing
             if was_playing:
-                animation_display.timer.active = False
+                self.timer.active = False
             
-            animation_display.timer.interval = animation_display.interval
+            self.timer.interval = self.interval
             
             if was_playing:
-                animation_display.timer.active = True
+                self.timer.active = True
             
-            animation_display.refresh()
+            self.display.refresh()
     
-    def decrease_speed():
+    def decrease_speed(self):
         """Decrease animation speed (increase interval)."""
-        current_speed_idx = animation_display.speeds.index(animation_display.speed)
+        current_speed_idx = self.speeds.index(self.speed)
         if current_speed_idx > 0:
-            animation_display.speed = animation_display.speeds[current_speed_idx - 1]
-            animation_display.interval = animation_display.base_interval / animation_display.speed
+            self.speed = self.speeds[current_speed_idx - 1]
+            self.interval = self.base_interval / self.speed
             
             # If playing, restart timer with new interval
-            was_playing = animation_display.playing
+            was_playing = self.playing
             if was_playing:
-                animation_display.timer.active = False
+                self.timer.active = False
             
-            animation_display.timer.interval = animation_display.interval
+            self.timer.interval = self.interval
             
             if was_playing:
-                animation_display.timer.active = True
+                self.timer.active = True
             
-            animation_display.refresh()
-    
-    # Initialize animation state
-    animation_display.step = 0
-    animation_display.playing = False
-    animation_display.speeds = [0.25, 0.5, 1, 2, 4]  # Speed multipliers
-    animation_display.speed = 1  # Current speed (1x = normal)
-    animation_display.base_interval = 1.0  # Base interval in seconds
-    animation_display.interval = animation_display.base_interval / animation_display.speed
-    animation_display.timer = ui.timer(animation_display.interval, auto_advance, active=False)
-    animation_display()
+            self.display.refresh()
+
+
+def _create_animation_viewer(sim_data):
+    """Create interactive cache animation viewer with play controls and speed adjustment."""
+    viewer = CacheAnimationViewer(sim_data)
+    viewer.display()
 
 
 def _display_cache_state(sim_data, snapshot, accessed, accessed_set, num_sets):

@@ -16,6 +16,41 @@ from components.simulation_card import simulation_card
 from backend.data import get_all_simulations, get_stats, delete_all_simulations
 
 
+@ui.refreshable
+def _simulations_list():
+    """Refreshable simulations list that updates when new simulations are added."""
+    simulations = get_all_simulations()
+    if not simulations:
+        ui.label("No simulations yet.").classes("text-gray-400 italic")
+    else:
+        with ui.column().classes("w-full gap-3"):
+            # Display most recent simulations first
+            for sim in reversed(simulations):
+                simulation_card(sim)
+
+
+def _handle_delete_all(refresh_callback):
+    """Handle delete all simulations with confirmation dialog."""
+    simulations = get_all_simulations()
+    if not simulations:
+        ui.notify("No simulations to delete", type="info")
+        return
+    
+    with ui.dialog() as dialog, ui.card():
+        ui.label("Delete All Simulations?").classes("text-lg font-bold")
+        ui.label(f"Are you sure you want to delete all {len(simulations)} simulation(s)? This action cannot be undone.").classes("text-gray-700 mb-4")
+        with ui.row().classes("gap-2 ml-auto"):
+            ui.button("Cancel", on_click=dialog.close).props("flat")
+            ui.button("Delete All", 
+                     on_click=lambda: (delete_all_simulations(), 
+                                     ui.notify(f"Deleted {len(simulations)} simulation(s)", type="positive"),
+                                     dialog.close(),
+                                     refresh_callback()), 
+                     color="red").props("flat")
+    
+    dialog.open()
+
+
 @ui.page("/simulations")
 def simulations_page():
     """
@@ -26,58 +61,20 @@ def simulations_page():
     with ui.column().classes("w-full max-w-5xl mx-auto py-10 px-6 gap-6"):
         ui.label("Cache Simulations Dashboard").classes("text-3xl font-bold text-green-800")
 
-        # --- Stats row ---
-        stats = get_stats()
         ui.separator()
 
-        # --- Simulation list (refreshable) - Define first so we can reference its refresh method ---
-        @ui.refreshable
-        def simulations_list():
-            """Refreshable simulations list that updates when new simulations are added."""
-            simulations = get_all_simulations()
-            if not simulations:
-                ui.label("No simulations yet.").classes("text-gray-400 italic")
-            else:
-                with ui.column().classes("w-full gap-3"):
-                    # Display most recent simulations first
-                    for sim in reversed(simulations):
-                        simulation_card(sim)
-
-        # --- Add simulation form ---
-        simulation_form(on_success=simulations_list.refresh)
+        # Add simulation form 
+        simulation_form(on_success=_simulations_list.refresh)
 
         ui.separator()
         
-        # --- Display simulations ---
-        def handle_delete_all():
-            """Handle delete all simulations with confirmation dialog."""
-            simulations = get_all_simulations()
-            if not simulations:
-                ui.notify("No simulations to delete", type="info")
-                return
-            
-            with ui.dialog() as dialog, ui.card():
-                ui.label("Delete All Simulations?").classes("text-lg font-bold")
-                ui.label(f"Are you sure you want to delete all {len(simulations)} simulation(s)? This action cannot be undone.").classes("text-gray-700 mb-4")
-                with ui.row().classes("gap-2 ml-auto"):
-                    ui.button("Cancel", on_click=dialog.close).props("flat")
-                    ui.button("Delete All", on_click=lambda: perform_delete_all(dialog), color="red").props("flat")
-            
-            dialog.open()
-        
-        def perform_delete_all(dialog):
-            """Perform the actual deletion."""
-            count = delete_all_simulations()
-            ui.notify(f"Deleted {count} simulation(s)", type="positive")
-            dialog.close()
-            simulations_list.refresh()
-        
+        # Display simulations 
         with ui.row().classes("gap-2"):
             ui.label("Cache Simulations").classes("text-lg font-semibold text-green-700")
-            ui.button("Delete All", on_click=handle_delete_all, color="red") \
+            ui.button("Delete All", on_click=lambda: _handle_delete_all(_simulations_list.refresh), color="red") \
                 .props("flat size=sm") \
                 .classes("ml-auto")
         
-        simulations_list()
+        _simulations_list()
 
     footer()

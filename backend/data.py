@@ -25,9 +25,8 @@ class CacheSimulation:
     """Represents a single cache simulation run."""
     id: int
     name: str
-    status: str          # "pending" | "running" | "done" | "error"
     
-    # Cache configuration (per spec)
+    # Cache configuration 
     cache_blocks: int    # number of cache blocks (min 4, power-of-2)
     block_size: int      # cache line size in words (min 2, power-of-2)
     associativity: int   # 1=direct-mapped, N=N-way set-associative
@@ -59,7 +58,6 @@ class CacheSimulation:
     
     # Metadata
     created_at: str = field(default_factory=lambda: datetime.now().isoformat())
-    result_value: float | None = None
 
     @classmethod
     def from_dict(cls, data: dict) -> CacheSimulation:
@@ -89,10 +87,6 @@ def _save_store(store: list[CacheSimulation]) -> None:
     app.storage.user[STORAGE_KEY] = [asdict(item) for item in store]
 
 
-# ---------------------------------------------------------------------------
-# CRUD operations
-# ---------------------------------------------------------------------------
-
 def get_all_simulations() -> list[CacheSimulation]:
     """Return all cache simulations."""
     return _load_store()
@@ -120,7 +114,8 @@ def add_simulation(
     store = _load_store()
     new_id = max((s.id for s in store), default=0) + 1
     sim = CacheSimulation(
-        new_id, name, "running",
+        id=new_id,
+        name=name,
         cache_blocks=cache_blocks,
         block_size=block_size,
         associativity=associativity,
@@ -160,9 +155,6 @@ def delete_all_simulations() -> int:
 
 
 def get_stats() -> dict:
-    """Get simulation counts by status."""
+    """Get simulation statistics."""
     store = _load_store()
-    counts: dict[str, int] = {}
-    for sim in store:
-        counts[sim.status] = counts.get(sim.status, 0) + 1
-    return counts
+    return {"total": len(store)}

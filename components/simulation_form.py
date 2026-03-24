@@ -4,6 +4,13 @@ from nicegui import ui
 from backend.data import add_simulation
 
 
+def is_power_of_2(n: int) -> bool:
+    """Check if a number is a power of 2."""
+    if n <= 0:
+        return False
+    return math.log2(n) % 1 == 0
+
+
 def simulation_form(on_success=None):
     """
     Display the simulation creation form with all configuration options.
@@ -24,14 +31,14 @@ def simulation_form(on_success=None):
             }
         ).classes("w-full")
         
-        # Memory configuration info (CSC512C spec)
+        # Memory configuration info
         with ui.card().classes("p-3 bg-blue-50 border-l-4 border-blue-500"):
             ui.label("Memory Configuration (CSC512C Spec)").classes("font-semibold text-blue-900 text-sm mb-1")
             with ui.row().classes("gap-6 text-xs text-blue-800"):
                 ui.label("📦 Total Memory Space: 1024 blocks ")
                 ui.label("💾 Cache Size: Configurable below (holds subset of memory)")
         
-        # Cache configuration (per CSC512C spec)
+        # Cache configuration 
         with ui.row().classes("w-full gap-4"):
             cache_blocks_input = ui.number(label="Cache Blocks (power-of-2, min 4, max 512)", value=4).classes("flex-1")
             block_size_input = ui.number(label="Block Size in words (power-of-2, min 2)", value=2).classes("flex-1")
@@ -70,12 +77,6 @@ def simulation_form(on_success=None):
         
         pattern_select.on_value_change(on_pattern_change)
         on_pattern_change()  # Initialize visibility
-        
-        def is_power_of_2(n: int) -> bool:
-            """Check if a number is a power of 2."""
-            if n <= 0:
-                return False
-            return math.log2(n) % 1 == 0
         
         def on_add():
             # Auto-generate simulation name if not provided
