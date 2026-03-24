@@ -105,6 +105,117 @@ def simulation_card(sim):
                     ui.label("Total Access Time:").classes("text-xs font-semibold text-gray-600")
                     ui.label(f"{sim.total_memory_access_time:.0f} ns").classes("text-gray-800")
             
+            # Text-based Trace Log
+            with ui.expansion("Trace Log", icon="article").classes("w-full mt-3"):
+                if sim.trace_log and len(sim.trace_log) > 0:
+                    # Download button for trace log
+                    def generate_trace_log_file():
+                        """Generate trace log content as a text file."""
+                        content = "=" * 80 + "\n"
+                        content += "CACHE SIMULATION TRACE LOG\n"
+                        content += "=" * 80 + "\n\n"
+                        
+                        # Header information
+                        content += f"Simulation Name: {sim.name}\n"
+                        content += f"Created:         {sim.created_at}\n"
+                        content += "\n"
+                        
+                        # Configuration
+                        content += "-" * 80 + "\n"
+                        content += "CONFIGURATION\n"
+                        content += "-" * 80 + "\n"
+                        
+                        if sim.associativity == 1:
+                            sim_type_text = "Direct Mapped"
+                        elif sim.associativity == 8 and sim.replacement_policy == "LRU":
+                            sim_type_text = "8-Way Set Associative + LRU"
+                        else:
+                            sim_type_text = f"{sim.associativity}-way + {sim.replacement_policy}"
+                        
+                        content += f"Simulation Type:     {sim_type_text}\n"
+                        content += f"Memory Space:        1024 blocks\n"
+                        content += f"Cache Size:          {sim.cache_blocks} blocks\n"
+                        content += f"Block Size:          {sim.block_size} words\n"
+                        content += f"Cache Access Time:   {sim.cache_access_time} ns/block\n"
+                        content += f"Memory Access Time:  {sim.memory_access_time} ns/word\n"
+                        
+                        # Test pattern
+                        if sim.test_pattern == "custom" and sim.custom_pattern:
+                            pattern_text = f"custom ({len(sim.custom_pattern)} accesses)"
+                        elif sim.test_pattern == "sequential":
+                            pattern_text = f"sequential ({4 * sim.cache_blocks} accesses)"
+                        elif sim.test_pattern == "mid_repeat":
+                            n = sim.cache_blocks
+                            base_length = 1 + 2 * (n - 1) + n
+                            pattern_text = f"mid_repeat ({2 * base_length} accesses)"
+                        elif sim.test_pattern == "random":
+                            random_len = getattr(sim, 'random_length', 64)
+                            pattern_text = f"random ({random_len} accesses)"
+                        else:
+                            pattern_text = sim.test_pattern
+                        
+                        content += f"Test Pattern:        {pattern_text}\n"
+                        
+                        # Custom pattern details
+                        if sim.test_pattern == "custom" and sim.custom_pattern:
+                            content += f"\nCustom Pattern Access Sequence:\n"
+                            # Format in rows of 20 numbers
+                            for i in range(0, len(sim.custom_pattern), 20):
+                                chunk = sim.custom_pattern[i:i+20]
+                                content += "  " + ", ".join(map(str, chunk)) + "\n"
+                        
+                        content += "\n"
+                        
+                        # Results
+                        if sim.status == "done" and sim.total_accesses > 0:
+                            content += "-" * 80 + "\n"
+                            content += "RESULTS\n"
+                            content += "-" * 80 + "\n"
+                            content += f"Total Accesses:      {sim.total_accesses}\n"
+                            content += f"Cache Hits:          {sim.cache_hits}\n"
+                            content += f"Cache Misses:        {sim.cache_misses}\n"
+                            content += f"Hit Rate:            {sim.hit_rate * 100:.2f}%\n"
+                            content += f"Miss Rate:           {sim.miss_rate * 100:.2f}%\n"
+                            content += f"Miss Penalty:        {sim.miss_penalty} ns\n"
+                            content += f"Avg Access Time:     {sim.avg_memory_access_time:.2f} ns\n"
+                            content += f"Total Access Time:   {sim.total_memory_access_time:.0f} ns\n"
+                            content += "\n"
+                        
+                        # Trace log
+                        content += "-" * 80 + "\n"
+                        content += "TRACE LOG\n"
+                        content += "-" * 80 + "\n"
+                        for i, trace_entry in enumerate(sim.trace_log, 1):
+                            content += f"{i:4d}. {trace_entry}\n"
+                        
+                        content += "\n" + "=" * 80 + "\n"
+                        content += "END OF TRACE LOG\n"
+                        content += "=" * 80 + "\n"
+                        
+                        return content.encode('utf-8')
+                    
+                    # Create filename based on simulation name
+                    safe_name = sim.name.replace(' ', '_').replace('/', '-').replace('\\', '-')
+                    filename = f"trace_log_{safe_name}_id{sim.id}.txt"
+                    
+                    ui.button("Download Trace Log", icon="download", 
+                             on_click=lambda: ui.download(generate_trace_log_file(), filename)) \
+                        .props("flat size=sm color=blue") \
+                        .classes("mb-2")
+                    
+                    with ui.column().classes("w-full gap-1 max-h-96 overflow-y-auto"):
+                        for i, trace_entry in enumerate(sim.trace_log, 1):
+                            # Color code based on HIT/MISS
+                            if "HIT" in trace_entry:
+                                color_class = "text-green-700"
+                            elif "evicted" in trace_entry:
+                                color_class = "text-red-700"
+                            else:
+                                color_class = "text-orange-700"
+                            ui.label(f"{i}. {trace_entry}").classes(f"text-xs font-mono {color_class}")
+                else:
+                    ui.label("No trace log available").classes("text-xs text-gray-500")
+            
             # Animated Cache Visualization
             with ui.expansion("Cache Animation", icon="play_circle").classes("w-full mt-3"):
                 if sim.cache_snapshots and len(sim.cache_snapshots) > 0:
