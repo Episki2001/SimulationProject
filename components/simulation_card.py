@@ -242,7 +242,7 @@ class CacheAnimationViewer:
         self._current_play_generation = None  # Track which play session is current
         
         # Read max speed from environment variable (default to 2x)
-        max_speed = float(os.getenv("ANIMATION_MAX_SPEED", "2"))
+        max_speed = float(os.getenv("ANIMATION_MAX_SPEED", "4"))
         # Generate speed multipliers: [0.25, 0.5, 1, 2, ...up to max_speed]
         self.speeds = [0.25, 0.5, 1]
         current = 2
@@ -460,7 +460,7 @@ def _display_cache_state(sim_data, snapshot, accessed, accessed_set, num_sets):
             _display_set_associative_cache(sim_data, cache_state, block_ages, accessed, accessed_set, snapshot, num_sets)
         
         # Show set organization only for 8-way
-        if sim_data.associativity == 8 and num_sets > 1:
+        if sim_data.associativity == 8 and num_sets >= 1:
             _display_set_organization(cache_state, is_direct_mapped, num_sets, accessed_set)
 
 
@@ -572,7 +572,7 @@ def _display_final_cache_memory(sim):
                 _display_final_set_associative(sim, cache_array_final, num_sets)
             
             # Show by set only for 8-way
-            if sim.associativity == 8 and num_sets > 1:
+            if sim.associativity == 8 and num_sets >= 1:
                 _display_final_set_organization(sim, cache_array_final, is_direct_mapped, num_sets)
 
 
