@@ -238,6 +238,7 @@ class CacheAnimationViewer:
         self.sim_data = sim_data
         self.step = 0
         self.playing = False
+        self._generation = 0  # Track state changes to prevent race conditions
         
         # Read max speed from environment variable (default to 2x)
         max_speed = float(os.getenv("ANIMATION_MAX_SPEED", "2"))
@@ -309,6 +310,18 @@ class CacheAnimationViewer:
             
             ui.label(f"Stats: Hits: {snapshot['hits']} | Misses: {snapshot['misses']}").classes("text-sm mt-3 text-gray-700")
     
+    def _create_checked_callback(self, generation):
+        """Create a callback wrapper that validates generation before executing.
+        
+        This prevents race conditions by ensuring timer callbacks from previous
+        animation sessions are ignored when controls are clicked rapidly.
+        """
+        def checked_auto_advance():
+            if self._generation != generation:
+                return
+            self._auto_advance()
+        return checked_auto_advance
+    
     def go_prev(self):
         """Navigate to previous step."""
         self.playing = False
@@ -319,6 +332,7 @@ class CacheAnimationViewer:
     
     def go_next(self):
         """Navigate to next step."""
+        self._generation += 1
         self.playing = False
         self.timer.active = False
         
@@ -327,6 +341,7 @@ class CacheAnimationViewer:
     
     def reset(self):
         """Reset to first step."""
+        self._generation += 1
         self.playing = False
         self.timer.active = False
         
@@ -350,14 +365,19 @@ class CacheAnimationViewer:
     def play_animation(self):
         """Start animation playback."""
         if not self.playing:
+            self._generation += 1
             self.playing = True
-            self.timer.interval = self.interval
-            self.timer.active = True
+            
+            # Recreate timer with generation-checking wrapper
+            self.timer.active = False
+            callback = self._create_checked_callback(self._generation)
+            self.timer = ui.timer(self.interval, callback, active=True)
             self.display.refresh()
     
     def stop_animation(self):
         """Stop animation playback."""
         # Set state first to prevent timer callbacks
+        self._generation += 1
         self.playing = False
         self.timer.active = False
         self.display.refresh()
@@ -366,6 +386,7 @@ class CacheAnimationViewer:
         """Increase animation speed (decrease interval)."""
         current_speed_idx = self.speeds.index(self.speed)
         if current_speed_idx < len(self.speeds) - 1:
+            self._generation += 1
             was_playing = self.playing
             self.playing = False
             self.timer.active = False
@@ -373,12 +394,12 @@ class CacheAnimationViewer:
             # Update speed and interval
             self.speed = self.speeds[current_speed_idx + 1]
             self.interval = self.base_interval / self.speed
-            self.timer.interval = self.interval
             
-            # Restart if was playing
+            # Restart if was playing with generation check
             if was_playing:
                 self.playing = True
-                self.timer.active = True
+                callback = self._create_checked_callback(self._generation)
+                self.timer = ui.timer(self.interval, callback, active=True)
             
             self.display.refresh()
     
@@ -386,7 +407,7 @@ class CacheAnimationViewer:
         """Decrease animation speed (increase interval)."""
         current_speed_idx = self.speeds.index(self.speed)
         if current_speed_idx > 0:
-            
+            self._generation += 1
             was_playing = self.playing
             self.playing = False
             self.timer.active = False
@@ -394,12 +415,12 @@ class CacheAnimationViewer:
             # Update speed and interval
             self.speed = self.speeds[current_speed_idx - 1]
             self.interval = self.base_interval / self.speed
-            self.timer.interval = self.interval
             
-            # Restart if was playing
+            # Restart if was playing with generation check
             if was_playing:
                 self.playing = True
-                self.timer.active = True
+                callback = self._create_checked_callback(self._generation)
+                self.timer = ui.timer(self.interval, callback, active=True)
             
             self.display.refresh()
 
