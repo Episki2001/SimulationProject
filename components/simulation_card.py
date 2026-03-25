@@ -338,8 +338,9 @@ class CacheAnimationViewer:
         """Start animation playback."""
         if not self.playing:
             self.playing = True
-            self.timer.interval = self.interval  # Ensure interval is set
-            self.timer.active = True
+            # Recreate timer to ensure proper initialization
+            self.timer.active = False
+            self.timer = ui.timer(self.interval, self._auto_advance, active=True)
             self.display.refresh()
     
     def stop_animation(self):
@@ -357,12 +358,10 @@ class CacheAnimationViewer:
             self.speed = self.speeds[current_speed_idx + 1]
             self.interval = self.base_interval / self.speed
             
-            # If playing, restart timer with new interval
+            # Recreate timer with new interval for reliability
             was_playing = self.playing
-            if was_playing:
-                self.timer.active = False
-            
-            self.timer.interval = self.interval
+            self.timer.active = False
+            self.timer = ui.timer(self.interval, self._auto_advance, active=False)
             
             if was_playing:
                 self.timer.active = True
@@ -376,12 +375,10 @@ class CacheAnimationViewer:
             self.speed = self.speeds[current_speed_idx - 1]
             self.interval = self.base_interval / self.speed
             
-            # If playing, restart timer with new interval
+            # Recreate timer with new interval for reliability
             was_playing = self.playing
-            if was_playing:
-                self.timer.active = False
-            
-            self.timer.interval = self.interval
+            self.timer.active = False
+            self.timer = ui.timer(self.interval, self._auto_advance, active=False)
             
             if was_playing:
                 self.timer.active = True
