@@ -1,189 +1,239 @@
 # CSC512C-Gamboa-Garcia-Simulation-Project
-Repository for CSC512C Simulation Project
 
-## Authors
-- **Kimberly Klaire H. Gamboa**
-- **Andre Emmanuel S. Garcia**
-
-## Description
 Cache simulation project implementing direct-mapped and set-associative cache architectures with visualization and animation capabilities.
 
-## Tech Stack
-- **Backend**: Python 3.8+
-- **Web Framework**: NiceGUI (FastAPI-based)
-- **Dependency Management**: Poetry
-- **UI Components**: Tailwind CSS (via NiceGUI)
-- **Storage**: Browser localStorage (client-side persistence)
-- **Architecture**: Component-based page routing
+## Authors
+- **Kimberly Klaire H. Gamboa** - kimberly_gamboa@dlsu.edu.ph
+- **Andre Emmanuel S. Garcia** - andre_emmanuel_garcia@dlsu.edu.ph
+
+---
 
 ## Features
 - **Direct-Mapped Cache**: Simulate direct-mapped cache with configurable parameters
 - **8-Way Set Associative Cache**: Simulate 8-way set associative cache with LRU replacement
 - **Configurable Timing**: Set cache access time and memory access time in nanoseconds
 - **Test Patterns**: Sequential, mid-repeat, random, and custom access patterns
-- **Animation**: Step-by-step visualization of cache operations
+- **Step-by-Step Animation**: Interactive visualization of cache operations with playback controls
 - **Performance Metrics**: Hit rate, miss rate, average access time, and total access time
-- **Web Interface**: Modern, interactive UI built with NiceGUI
+- **Export Results**: Download trace logs as text files
+- **Modern Web Interface**: Built with NiceGUI and Tailwind CSS
+- **Persistent Storage**: Browser localStorage for per-user simulation history
 
-## Prerequisites
+---
+
+## Tech Stack
+- **Backend**: Python 3.14+
+- **Web Framework**: NiceGUI (FastAPI-based)
+- **Dependency Management**: Poetry
+- **UI Components**: Tailwind CSS (via NiceGUI)
+- **Storage**: Browser localStorage (client-side)
+- **Deployment**: Docker, Render
+
+---
+
+## Quick Start
+
+### Prerequisites
 - **Python 3.8 or higher**
 - **Poetry** (Python dependency management tool)
 
-### Installing Poetry
-If you don't have Poetry installed, run:
+### Installation
 
-```bash
-# Windows (PowerShell)
-(Invoke-WebRequest -Uri https://install.python-poetry.org -UseBasicParsing).Content | python -
-
-# macOS/Linux
-curl -sSL https://install.python-poetry.org | python3 -
-```
-
-## Local Setup & Installation
-
-### Step 1: Clone the Repository
+**1. Clone the Repository**
 ```bash
 git clone https://github.com/Episki2001/SimulationProject.git
 cd SimulationProject
 ```
 
-### Step 2: Install Poetry (if not already installed)
-Poetry is required for dependency management. Install it using one of the following methods:
+**2. Install Poetry** (if not already installed)
 
-**Windows (PowerShell):**
+Windows (PowerShell):
 ```powershell
 (Invoke-WebRequest -Uri https://install.python-poetry.org -UseBasicParsing).Content | python -
 ```
 
-**macOS/Linux:**
+macOS/Linux:
 ```bash
 curl -sSL https://install.python-poetry.org | python3 -
 ```
 
 After installation, restart your terminal or add Poetry to your PATH.
 
-### Step 3: Install Project Dependencies
-Poetry will automatically create a virtual environment and install all required dependencies:
-
+**3. Install Dependencies**
 ```bash
 poetry install
 ```
 
-This will:
-- Create a virtual environment for the project
-- Install NiceGUI and all required packages
-- Set up the development environment
-
-### Step 4: Run the Application
-Start the local development server:
-
+**4. Run the Application**
 ```bash
 poetry run python main.py
 ```
 
-You should see output similar to:
-```
-NiceGUI ready to go on http://localhost:8080
-```
+**5. Access the Application**
 
-### Step 5: Access the Application
-Open your web browser and navigate to:
-```
-http://localhost:8080
-```
+Open your browser and navigate to: **http://localhost:8080**
 
-The application will be running with hot-reload enabled, so any code changes will automatically refresh the browser.
+---
 
 ## Usage
 
 ### Creating a Simulation
+
 1. Navigate to the **Simulations** page
 2. Fill in the simulation parameters:
-   - **Simulation Name**: Descriptive name for your simulation
+   - **Simulation Name**: Descriptive name for your simulation (auto-generated if empty)
    - **Simulation Type**: Direct Mapped or 8-Way Set Associative + LRU
-   - **Cache Blocks**: Number of cache blocks (power of 2, min 4)
-   - **Block Size**: Block size in words (power of 2, min 2)
-   - **Cache Access Time**: Time per cache access in nanoseconds
-   - **Memory Access Time**: Time per word fetch from memory in nanoseconds
-   - **Test Pattern**: Choose from sequential, mid_repeat, random, or custom
+   - **Cache Blocks**: Number of cache blocks (power of 2, minimum 4)
+   - **Block Size**: Block size in words (power of 2, minimum 2)
+   - **Cache Access Time**: Time per cache access in nanoseconds (1-1000 ns)
+   - **Memory Access Time**: Time per word fetch from memory in nanoseconds (1-1000 ns)
+   - **Test Pattern**: Choose from:
+     - `sequential` - Sequential access pattern (4 × cache_blocks accesses)
+     - `mid_repeat` - Mid-repeat pattern
+     - `random` - Random access pattern (configurable length)
+     - `custom` - Custom comma-separated block numbers (0-1023)
 3. Click **Create Simulation**
 
 ### Viewing Results
+
 After creating a simulation, you can:
-- View **performance metrics** (hits, misses, hit rate, miss rate)
-- View **timing information** (miss penalty, average access time, total access time)
-- Watch **cache animation** showing step-by-step cache operations
-- Inspect **final cache memory** state
+- **Performance Metrics**: View hits, misses, hit rate, and miss rate
+- **Timing Information**: Miss penalty, average access time, total access time
+- **Trace Log**: Step-by-step text log of cache operations (downloadable)
+- **Cache Animation**: Interactive playback with speed controls (0.25x to 2x)
+- **Final Cache State**: Inspect the final cache memory contents
+
+---
 
 ## Project Structure
+
 ```
 SimulationProject/
 ├── main.py                    # Application entry point
-├── pyproject.toml            # Poetry configuration and dependencies
-├── README.md                 # This file
+├── pyproject.toml            # Poetry dependencies
+├── Dockerfile                # Docker configuration
+├── render.yaml               # Render deployment config
+├── README.md                 # Documentation
 ├── backend/
-│   ├── __init__.py
-│   ├── data.py              # Data models and localStorage persistence
-│   └── simulation.py        # Cache simulation engine (direct-mapped & set-associative)
+│   ├── data.py              # Data models & localStorage
+│   └── simulation.py        # Cache simulation engine
 ├── components/
-│   ├── __init__.py
-│   ├── navbar.py            # Navigation bar component
-│   ├── footer.py            # Footer component
-│   ├── links.py             # Links section component
-│   ├── author_card.py       # Author information card
-│   ├── simulation_card.py   # Simulation display card
+│   ├── navbar.py            # Navigation bar
+│   ├── footer.py            # Footer
+│   ├── author_card.py       # Author information
+│   ├── simulation_card.py   # Simulation display & animation
 │   ├── simulation_form.py   # Simulation creation form
-│   └── stats_card.py        # Statistics card component
+│   └── stats_card.py        # Statistics display
 └── pages/
-    ├── __init__.py
-    ├── home.py              # Home/landing page
-    ├── about.py             # About page with project info
-    └── simulations.py       # Simulations page (create & view)
+    ├── home.py              # Landing page
+    ├── about.py             # About page
+    └── simulations.py       # Simulations page
 ```
 
+---
+
 ## Configuration
-The application uses the following default configurations:
+
+### Application Settings
+
 - **Storage**: Browser localStorage (per-user, persistent)
 - **Memory Space**: 1024 blocks (0-1023) - Fixed per CSC512C spec
-- **Cache Access Time**: 1 ns/block (configurable)
-- **Memory Access Time**: 10 ns/word (configurable)
 - **Read Policy**: Non load-through (fixed)
-- **Port**: 8080 (configurable in main.py)
+- **Port**: 8080 (configurable via environment variable)
 
-### Data Storage
-- Each user's simulations are stored in their **browser's localStorage**
-- Data persists across browser sessions but is isolated per user/browser
-- No server-side storage or shared data between users
-- Initial state: **empty** (no seed data)
+### Environment Variables
 
-## Timing Formulas
-- **Hit Time**: cache_access_time
-- **Miss Penalty**: cache_access_time + (block_size × memory_access_time) + cache_access_time
-- **Average Memory Access Time (AMAT)**: hit_time + miss_rate × miss_penalty
-- **Total Access Time**: (hits × hit_time) + (misses × miss_penalty)
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `HOST` | `0.0.0.0` | Server host address |
+| `PORT` | `8080` | Server port |
+| `RELOAD` | `false` | Hot reload (set `true` for development) |
+| `STORAGE_SECRET` | (auto) | Secret key for session storage |
+| `ANIMATION_MAX_SPEED` | `2` | Maximum animation speed (2, 4, 8, 16) |
+
+---
 
 ## Development
 
 ### Running in Development Mode
-The application runs with hot-reload enabled by default:
+
 ```bash
 poetry run python main.py
 ```
 
+The application runs with hot-reload enabled by default in local mode.
+
 ### Clearing Browser Storage
+
 To reset all simulation data:
 1. Open browser Developer Tools (F12)
 2. Navigate to **Application** → **Local Storage**
 3. Find `cache_simulations` key and delete it
-4. Or clear all localStorage for the site
+
+---
+
+## Deployment
+
+### Docker Deployment
+
+**Build and Run Locally:**
+```bash
+docker build -t simulation-project .
+docker run -p 8080:8080 simulation-project
+```
+
+**With Custom Configuration:**
+```bash
+docker run -p 8080:8080 -e ANIMATION_MAX_SPEED=4 simulation-project
+```
+
+**Stop Container:**
+```bash
+docker stop simulation-app
+docker rm simulation-app
+```
+
+### Render Deployment
+
+#### Option 1: Docker (Recommended)
+
+1. **Push to GitHub:**
+   ```bash
+   git add .
+   git commit -m "Deploy to Render"
+   git push
+   ```
+
+2. **In Render Dashboard:**
+   - Click **"New +"** → **"Web Service"**
+   - Connect repository: `Episki2001/SimulationProject`
+   - **Environment**: Docker
+   - **Region**: Choose your preferred region
+   - Click **"Create Web Service"**
+
+#### Option 2: Native Python
+
+1. **Push to GitHub** (same as above)
+
+2. **In Render Dashboard:**
+   - Click **"New +"** → **"Blueprint"**
+   - Connect your repository
+   - Render will detect `render.yaml` automatically
+
+#### Configure Environment Variables (Optional)
+
+In Render dashboard, add any of these variables:
+- `STORAGE_SECRET` - Custom secret key
+- `ANIMATION_MAX_SPEED` - Max playback speed (2, 4, 8, 16)
+- `PORT`, `HOST`, `RELOAD` - Server configuration
+
+---
 
 ## Troubleshooting
 
 ### Port Already in Use
-If port 8080 is already in use, you can:
-1. Stop the conflicting process
-2. Change the port in `main.py`:
+
+Change the port in `main.py`:
 ```python
 ui.run(
     title="CSC512C Simulation Project",
@@ -193,100 +243,33 @@ ui.run(
 )
 ```
 
+Or set via environment variable:
+```bash
+PORT=8081 poetry run python main.py
+```
+
 ### Dependencies Not Installing
-Try updating Poetry and reinstalling:
+
 ```bash
 poetry self update
 poetry env remove python
 poetry install
 ```
 
-## Deployment
+### Animation Performance Issues
 
-### Docker Deployment
+Lower the maximum speed by setting `ANIMATION_MAX_SPEED=2` in your environment.
 
-The project includes a Dockerfile for easy containerization and deployment.
-
-#### Build Docker Image
-```bash
-docker build -t simulation-project .
-```
-
-#### Run Docker Container
-```bash
-# Run in foreground
-docker run -p 8080:8080 simulation-project
-
-# Run in detached mode
-docker run -d -p 8080:8080 --name simulation-app simulation-project
-```
-
-Access the application at `http://localhost:8080`
-
-#### Stop Docker Container
-```bash
-docker stop simulation-app
-docker rm simulation-app
-```
-
-### Render Deployment
-
-This application can be deployed to [Render](https://render.com) using either Docker or native Python.
-
-#### Option 1: Deploy with Docker (Recommended)
-
-1. **Push your code to GitHub:**
-   ```bash
-   git add .
-   git commit -m "Deploy to Render"
-   git push
-   ```
-
-2. **In Render Dashboard:**
-   - Click **"New +"** → **"Web Service"**
-   - Connect your GitHub repository: `Episki2001/SimulationProject`
-   - Configure the service:
-     - **Environment**: Docker
-     - **Region**: Choose your preferred region
-     - **Plan**: Free or paid tier
-   - Click **"Create Web Service"**
-
-Render will automatically use your Dockerfile to build and deploy the application.
-
-#### Option 2: Deploy with Native Python
-
-The project includes a `render.yaml` configuration file for blueprint deployment.
-
-1. **Push your code to GitHub** (same as above)
-
-2. **In Render Dashboard:**
-   - Click **"New +"** → **"Blueprint"**
-   - Connect your repository
-   - Render will detect `render.yaml` and configure automatically
-
-#### Environment Variables (Optional)
-
-You can add these environment variables in Render dashboard for customization:
-- `STORAGE_SECRET`: Custom secret key for session storage
-- `PORT`: Port number (default: 8080)
-- `HOST`: Host address (default: 0.0.0.0)
-- `RELOAD`: Enable hot reload (default: false for production)
-- `ANIMATION_MAX_SPEED`: Maximum playback speed for cache animations (default: 2, options: 2, 4, 8, 16)
-
-#### Testing Before Deployment
-
-Test the Docker setup locally before deploying:
-```bash
-docker build -t simulation-project .
-docker run -p 8080:8080 simulation-project
-```
-
-Visit `http://localhost:8080` to verify it works correctly.
+---
 
 ## License
-This project is developed for academic purposes as part of CSC512C coursework.
+
+This project is developed for academic purposes as part of CSC512C coursework at De La Salle University.
+
+---
 
 ## Support
+
 For issues or questions, please contact:
-- Kimberly Klaire H. Gamboa: kimberly_gamboa@dlsu.edu.ph
-- Andre Emmanuel S. Garcia: andre_emmanuel_garcia@dlsu.edu.ph
+- **Kimberly Klaire H. Gamboa**: kimberly_gamboa@dlsu.edu.ph
+- **Andre Emmanuel S. Garcia**: andre_emmanuel_garcia@dlsu.edu.ph
