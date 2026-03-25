@@ -33,7 +33,7 @@ def simulation_form(on_success=None):
         
         # Memory configuration info
         with ui.card().classes("p-3 bg-blue-50 border-l-4 border-blue-500"):
-            ui.label("Memory Configuration (CSC512C Spec)").classes("font-semibold text-blue-900 text-sm mb-1")
+            ui.label("Memory Configuration").classes("font-semibold text-blue-900 text-sm mb-1")
             with ui.row().classes("gap-6 text-xs text-blue-800"):
                 ui.label("📦 Total Memory Space: 1024 blocks ")
                 ui.label("💾 Cache Size: Configurable below (holds subset of memory)")
