@@ -366,16 +366,18 @@ class CacheAnimationViewer:
         """Increase animation speed (decrease interval)."""
         current_speed_idx = self.speeds.index(self.speed)
         if current_speed_idx < len(self.speeds) - 1:
+            was_playing = self.playing
+            self.playing = False
+            self.timer.active = False
+            
+            # Update speed and interval
             self.speed = self.speeds[current_speed_idx + 1]
             self.interval = self.base_interval / self.speed
-            
-            # Update timer interval
-            was_playing = self.playing
-            
-            self.timer.active = False
             self.timer.interval = self.interval
             
+            # Restart if was playing
             if was_playing:
+                self.playing = True
                 self.timer.active = True
             
             self.display.refresh()
@@ -384,16 +386,19 @@ class CacheAnimationViewer:
         """Decrease animation speed (increase interval)."""
         current_speed_idx = self.speeds.index(self.speed)
         if current_speed_idx > 0:
+            
+            was_playing = self.playing
+            self.playing = False
+            self.timer.active = False
+            
+            # Update speed and interval
             self.speed = self.speeds[current_speed_idx - 1]
             self.interval = self.base_interval / self.speed
-            
-            # Update timer interval
-            was_playing = self.playing
-            
-            self.timer.active = False
             self.timer.interval = self.interval
             
+            # Restart if was playing
             if was_playing:
+                self.playing = True
                 self.timer.active = True
             
             self.display.refresh()
