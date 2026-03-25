@@ -283,7 +283,7 @@ class CacheAnimationViewer:
                 ui.label(f"({self.interval:.2f}s/step)").classes("text-xs text-gray-500")
             
             # Calculate set information
-            num_sets = self.sim_data.cache_blocks // self.sim_data.associativity if self.sim_data.associativity > 0 else 1
+            num_sets = 1 if (self.sim_data.associativity == 0 or self.sim_data.associativity > self.sim_data.cache_blocks) else (self.sim_data.cache_blocks // self.sim_data.associativity)
             accessed = snapshot["accessed_block"]
             accessed_set = accessed % num_sets if num_sets > 0 else 0
             
@@ -502,7 +502,9 @@ def _display_set_associative_cache(sim_data, cache_state, block_ages, accessed, 
         with ui.card().classes(f"w-full p-3 {bg_color} mb-2"):
             ui.label(f"Set {set_id}:").classes("text-xs font-semibold text-purple-700 mb-2")
             with ui.grid(columns=8).classes("gap-2"):
-                for block_idx in range(sim_data.associativity):
+                # Use actual cache_state size instead of associativity value
+                blocks_per_set = len(cache_state[set_id]) if set_id < len(cache_state) else 0
+                for block_idx in range(blocks_per_set):
                     block = cache_state[set_id][block_idx] if set_id < len(cache_state) and block_idx < len(cache_state[set_id]) else None
                     if block is not None:
                         age = age_map.get((set_id, block_idx), 0)
@@ -544,7 +546,7 @@ def _display_final_cache_memory(sim):
     """Display final cache memory state."""
     with ui.column().classes("w-full gap-3"):
         cache_array_final = sim.final_cache_memory
-        num_sets = sim.cache_blocks // sim.associativity if sim.associativity > 0 else 1
+        num_sets = 1 if (sim.associativity == 0 or sim.associativity > sim.cache_blocks) else (sim.cache_blocks // sim.associativity)
         is_direct_mapped = (sim.associativity == 1)
         
         # Count non-None blocks
@@ -595,7 +597,9 @@ def _display_final_set_associative(sim, cache_array_final, num_sets):
         with ui.card().classes("w-full p-3 bg-purple-50 mb-2"):
             ui.label(f"Set {set_id}:").classes("text-xs font-semibold text-purple-700 mb-2")
             with ui.grid(columns=8).classes("gap-2"):
-                for block_idx in range(sim.associativity):
+                # Use actual cache_array_final size instead of associativity value
+                blocks_per_set = len(cache_array_final[set_id]) if set_id < len(cache_array_final) else 0
+                for block_idx in range(blocks_per_set):
                     block = cache_array_final[set_id][block_idx] if set_id < len(cache_array_final) and block_idx < len(cache_array_final[set_id]) else None
                     if block is not None:
                         display_text = f"[{block_idx}] B{block}"
@@ -607,6 +611,8 @@ def _display_final_set_associative(sim, cache_array_final, num_sets):
 def _display_final_set_organization(sim, cache_array_final, is_direct_mapped, num_sets):
     """Display final blocks organized by sets (8-way only)."""
     ui.label(f"Blocks Organized by Sets:").classes("text-xs font-semibold text-gray-600 mt-3 mb-2")
+    # Calculate actual blocks per set
+    actual_blocks_per_set = min(sim.associativity, sim.cache_blocks) if sim.associativity > 1 else sim.associativity
     with ui.row().classes("gap-2 flex-wrap"):
         for set_id in range(num_sets):
             if is_direct_mapped:
@@ -618,6 +624,6 @@ def _display_final_set_organization(sim, cache_array_final, is_direct_mapped, nu
                 ui.label(f"Set {set_id}:").classes("text-xs font-semibold text-purple-700")
                 if blocks_in_set:
                     ui.label(f"{blocks_in_set}").classes("text-xs text-gray-700")
-                    ui.label(f"({len(blocks_in_set)}/{sim.associativity} blocks)").classes("text-xs text-gray-500 italic")
+                    ui.label(f"({len(blocks_in_set)}/{actual_blocks_per_set} blocks)").classes("text-xs text-gray-500 italic")
                 else:
                     ui.label("empty").classes("text-xs text-gray-400 italic")

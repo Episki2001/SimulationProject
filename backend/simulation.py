@@ -40,7 +40,7 @@ class CacheSimulator:
         
         # Initialize cache structure
         num_sets = self.get_num_sets()
-        self.blocks_per_set = sim.associativity
+        self.blocks_per_set = min(sim.associativity, sim.cache_blocks) if sim.associativity > 1 else sim.associativity
         self.is_direct_mapped = (sim.associativity == 1)
         
         if self.is_direct_mapped:
