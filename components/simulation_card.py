@@ -184,8 +184,8 @@ def simulation_card(sim):
             with ui.expansion("Trace Log", icon="article").classes("w-full mt-3"):
                 if sim.trace_log and len(sim.trace_log) > 0:
                     # Create filename based on simulation name
-                    safe_name = sim.name.replace(' ', '_').replace('/', '-').replace('\\', '-')
-                    filename = f"{safe_name}_trace_log.txt"
+                    safe_name = sim.name.replace(' ', '_').replace('/', '_').replace('\\', '_').replace(':', '_').replace('-', '_')
+                    filename = f"{safe_name}.txt"
                     
                     ui.button("Download Trace Log", icon="download", 
                              on_click=lambda: ui.download(_generate_trace_log_file(sim), filename)) \
