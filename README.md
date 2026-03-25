@@ -271,6 +271,7 @@ You can add these environment variables in Render dashboard for customization:
 - `PORT`: Port number (default: 8080)
 - `HOST`: Host address (default: 0.0.0.0)
 - `RELOAD`: Enable hot reload (default: false for production)
+- `ANIMATION_MAX_SPEED`: Maximum playback speed for cache animations (default: 2, options: 2, 4, 8, 16)
 
 #### Testing Before Deployment
 

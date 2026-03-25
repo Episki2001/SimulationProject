@@ -27,6 +27,7 @@ ENV PYTHONUNBUFFERED=1
 ENV HOST=0.0.0.0
 ENV PORT=8080
 ENV RELOAD=false
+ENV ANIMATION_MAX_SPEED=2
 
 # Run the application
 CMD ["python", "main.py"]

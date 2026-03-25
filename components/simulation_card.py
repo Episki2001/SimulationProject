@@ -1,3 +1,4 @@
+import os
 from datetime import datetime
 from nicegui import ui
 from backend.data import delete_simulation
@@ -237,7 +238,16 @@ class CacheAnimationViewer:
         self.sim_data = sim_data
         self.step = 0
         self.playing = False
-        self.speeds = [0.25, 0.5, 1, 2]  # Speed multipliers
+        
+        # Read max speed from environment variable (default to 2x)
+        max_speed = float(os.getenv("ANIMATION_MAX_SPEED", "2"))
+        # Generate speed multipliers: [0.25, 0.5, 1, 2, ...up to max_speed]
+        self.speeds = [0.25, 0.5, 1]
+        current = 2
+        while current <= max_speed:
+            self.speeds.append(current)
+            current *= 2
+        
         self.speed = 1  # Current speed (1x = normal)
         self.base_interval = 1.0  # Base interval in seconds
         self.interval = self.base_interval / self.speed
