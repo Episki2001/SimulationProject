@@ -237,7 +237,7 @@ class CacheAnimationViewer:
         self.sim_data = sim_data
         self.step = 0
         self.playing = False
-        self.speeds = [0.25, 0.5, 1, 2, 4]  # Speed multipliers
+        self.speeds = [0.25, 0.5, 1, 2]  # Speed multipliers
         self.speed = 1  # Current speed (1x = normal)
         self.base_interval = 1.0  # Base interval in seconds
         self.interval = self.base_interval / self.speed
@@ -338,9 +338,8 @@ class CacheAnimationViewer:
         """Start animation playback."""
         if not self.playing:
             self.playing = True
-            # Recreate timer to ensure proper initialization
-            self.timer.active = False
-            self.timer = ui.timer(self.interval, self._auto_advance, active=True)
+            self.timer.interval = self.interval
+            self.timer.active = True
             self.display.refresh()
     
     def stop_animation(self):
@@ -358,10 +357,12 @@ class CacheAnimationViewer:
             self.speed = self.speeds[current_speed_idx + 1]
             self.interval = self.base_interval / self.speed
             
-            # Recreate timer with new interval for reliability
+            # Update timer interval
             was_playing = self.playing
-            self.timer.active = False
-            self.timer = ui.timer(self.interval, self._auto_advance, active=False)
+            if was_playing:
+                self.timer.active = False
+            
+            self.timer.interval = self.interval
             
             if was_playing:
                 self.timer.active = True
@@ -375,10 +376,12 @@ class CacheAnimationViewer:
             self.speed = self.speeds[current_speed_idx - 1]
             self.interval = self.base_interval / self.speed
             
-            # Recreate timer with new interval for reliability
+            # Update timer interval
             was_playing = self.playing
-            self.timer.active = False
-            self.timer = ui.timer(self.interval, self._auto_advance, active=False)
+            if was_playing:
+                self.timer.active = False
+            
+            self.timer.interval = self.interval
             
             if was_playing:
                 self.timer.active = True
