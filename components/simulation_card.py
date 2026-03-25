@@ -295,7 +295,7 @@ class CacheAnimationViewer:
             
             # Access info - handle initial step 0
             if accessed is None:
-                ui.label("📋 INITIAL STATE - All cache memory empty").classes("text-sm font-semibold text-blue-700")
+                ui.label("INITIAL STATE").classes("text-sm font-semibold text-blue-700")
             elif snapshot["is_hit"]:
                 if self.sim_data.associativity == 8:
                     ui.label(f"✓ ACCESS Block {accessed} (Set {accessed_set}) - HIT!").classes("text-sm font-semibold text-green-700")
