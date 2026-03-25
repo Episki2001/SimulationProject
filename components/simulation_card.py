@@ -311,38 +311,41 @@ class CacheAnimationViewer:
     
     def go_prev(self):
         """Navigate to previous step."""
-        if self.playing:
-            self.timer.active = False
-            self.playing = False
+        self.playing = False
+        self.timer.active = False
+        
         self.step = max(0, self.step - 1)
         self.display.refresh()
     
     def go_next(self):
         """Navigate to next step."""
-        if self.playing:
-            self.timer.active = False
-            self.playing = False
+        self.playing = False
+        self.timer.active = False
+        
         self.step = min(len(self.sim_data.cache_snapshots) - 1, self.step + 1)
         self.display.refresh()
     
     def reset(self):
         """Reset to first step."""
+        self.playing = False
+        self.timer.active = False
+        
         self.step = 0
-        if self.playing:
-            self.timer.active = False
-            self.playing = False
         self.display.refresh()
     
     def _auto_advance(self):
         """Auto-advance to next step during playback."""
+        if not self.playing:
+            return
+            
         if self.step < len(self.sim_data.cache_snapshots) - 1:
             self.step += 1
             self.display.refresh()
         else:
             # Reached end - stop animation
-            self.timer.active = False
             self.playing = False
-            ui.timer(0.05, lambda: self.display.refresh(), once=True)
+            self.timer.active = False
+            self.display.refresh()
     
     def play_animation(self):
         """Start animation playback."""
@@ -354,11 +357,10 @@ class CacheAnimationViewer:
     
     def stop_animation(self):
         """Stop animation playback."""
-        # Always stop the timer first, regardless of state
-        self.timer.active = False
+        # Set state first to prevent timer callbacks
         self.playing = False
-        # Use a deferred refresh to avoid race conditions with button clicks
-        ui.timer(0.05, lambda: self.display.refresh(), once=True)
+        self.timer.active = False
+        self.display.refresh()
     
     def increase_speed(self):
         """Increase animation speed (decrease interval)."""
@@ -369,9 +371,8 @@ class CacheAnimationViewer:
             
             # Update timer interval
             was_playing = self.playing
-            if was_playing:
-                self.timer.active = False
             
+            self.timer.active = False
             self.timer.interval = self.interval
             
             if was_playing:
@@ -388,9 +389,8 @@ class CacheAnimationViewer:
             
             # Update timer interval
             was_playing = self.playing
-            if was_playing:
-                self.timer.active = False
             
+            self.timer.active = False
             self.timer.interval = self.interval
             
             if was_playing:
