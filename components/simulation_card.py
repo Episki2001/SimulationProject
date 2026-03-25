@@ -11,7 +11,6 @@ def _generate_trace_log_file(sim):
     
     # Header information
     content += f"Simulation Name: {sim.name}\n"
-    content += f"Simulation ID:   #{sim.id}\n"
     content += f"Created:         {sim.created_at}\n"
     content += "\n"
     
@@ -186,7 +185,7 @@ def simulation_card(sim):
                 if sim.trace_log and len(sim.trace_log) > 0:
                     # Create filename based on simulation name
                     safe_name = sim.name.replace(' ', '_').replace('/', '-').replace('\\', '-')
-                    filename = f"trace_log_{safe_name}_id{sim.id}.txt"
+                    filename = f"{safe_name}_trace_log.txt"
                     
                     ui.button("Download Trace Log", icon="download", 
                              on_click=lambda: ui.download(_generate_trace_log_file(sim), filename)) \
