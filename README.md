@@ -201,6 +201,87 @@ poetry env remove python
 poetry install
 ```
 
+## Deployment
+
+### Docker Deployment
+
+The project includes a Dockerfile for easy containerization and deployment.
+
+#### Build Docker Image
+```bash
+docker build -t simulation-project .
+```
+
+#### Run Docker Container
+```bash
+# Run in foreground
+docker run -p 8080:8080 simulation-project
+
+# Run in detached mode
+docker run -d -p 8080:8080 --name simulation-app simulation-project
+```
+
+Access the application at `http://localhost:8080`
+
+#### Stop Docker Container
+```bash
+docker stop simulation-app
+docker rm simulation-app
+```
+
+### Render Deployment
+
+This application can be deployed to [Render](https://render.com) using either Docker or native Python.
+
+#### Option 1: Deploy with Docker (Recommended)
+
+1. **Push your code to GitHub:**
+   ```bash
+   git add .
+   git commit -m "Deploy to Render"
+   git push
+   ```
+
+2. **In Render Dashboard:**
+   - Click **"New +"** → **"Web Service"**
+   - Connect your GitHub repository: `Episki2001/SimulationProject`
+   - Configure the service:
+     - **Environment**: Docker
+     - **Region**: Choose your preferred region
+     - **Plan**: Free or paid tier
+   - Click **"Create Web Service"**
+
+Render will automatically use your Dockerfile to build and deploy the application.
+
+#### Option 2: Deploy with Native Python
+
+The project includes a `render.yaml` configuration file for blueprint deployment.
+
+1. **Push your code to GitHub** (same as above)
+
+2. **In Render Dashboard:**
+   - Click **"New +"** → **"Blueprint"**
+   - Connect your repository
+   - Render will detect `render.yaml` and configure automatically
+
+#### Environment Variables (Optional)
+
+You can add these environment variables in Render dashboard for customization:
+- `STORAGE_SECRET`: Custom secret key for session storage
+- `PORT`: Port number (default: 8080)
+- `HOST`: Host address (default: 0.0.0.0)
+- `RELOAD`: Enable hot reload (default: false for production)
+
+#### Testing Before Deployment
+
+Test the Docker setup locally before deploying:
+```bash
+docker build -t simulation-project .
+docker run -p 8080:8080 simulation-project
+```
+
+Visit `http://localhost:8080` to verify it works correctly.
+
 ## License
 This project is developed for academic purposes as part of CSC512C coursework.
 

@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: simulation-project
+    runtime: python
+    buildCommand: pip install poetry && poetry config virtualenvs.create false && poetry install --no-root
+    startCommand: python main.py
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.14.0
+      - key: PORT
+        value: 8080
+    plan: free
