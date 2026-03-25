@@ -87,7 +87,15 @@ def simulation_form(on_success=None):
                 if sim_type == "direct_mapped":
                     sim_type_text = "Direct Mapped"
                 elif sim_type == "8way_lru":
-                    sim_type_text = "8-Way LRU"
+                    # Check if cache blocks < 8 to determine if it's fully associative
+                    try:
+                        cache_blocks = int(cache_blocks_input.value)
+                        if cache_blocks < 8:
+                            sim_type_text = "Full Associative LRU"
+                        else:
+                            sim_type_text = "8-Way LRU"
+                    except (ValueError, TypeError):
+                        sim_type_text = "8-Way LRU"
                 else:
                     sim_type_text = "Simulation"
                 

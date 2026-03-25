@@ -23,7 +23,10 @@ def _generate_trace_log_file(sim):
     if sim.associativity == 1:
         sim_type_text = "Direct Mapped"
     elif sim.associativity == 8 and sim.replacement_policy == "LRU":
-        sim_type_text = "8-Way Set Associative + LRU"
+        if sim.cache_blocks < 8:
+            sim_type_text = "Full Associative LRU"
+        else:
+            sim_type_text = "8-Way Set Associative + LRU"
     else:
         sim_type_text = f"{sim.associativity}-way + {sim.replacement_policy}"
     
@@ -107,7 +110,10 @@ def simulation_card(sim):
                 if sim.associativity == 1:
                     sim_type_text = "Direct Mapped"
                 elif sim.associativity == 8 and sim.replacement_policy == "LRU":
-                    sim_type_text = "8-Way Set Associative + LRU"
+                    if sim.cache_blocks < 8:
+                        sim_type_text = "Full Associative LRU"
+                    else:
+                        sim_type_text = "8-Way Set Associative + LRU"
                 else:
                     sim_type_text = f"{sim.associativity}-way + {sim.replacement_policy}"
                 ui.label(sim_type_text).classes("text-gray-800 font-semibold")
@@ -263,7 +269,7 @@ class CacheAnimationViewer:
         with ui.column().classes("w-full gap-3"):
             # Animation controls - Row 1: Play/Stop and navigation
             with ui.row().classes("items-center gap-3 flex-wrap"):
-                ui.label(f"Step: {self.step + 1} / {len(self.sim_data.cache_snapshots)}").classes("text-sm font-semibold")
+                ui.label(f"Step: {snapshot['step']} / {len(self.sim_data.cache_snapshots) - 1}").classes("text-sm font-semibold")
                 
                 if self.playing:
                     ui.button("⏸ Stop", on_click=self.stop_animation).props("size=sm color=orange")
@@ -285,10 +291,12 @@ class CacheAnimationViewer:
             # Calculate set information
             num_sets = 1 if (self.sim_data.associativity == 0 or self.sim_data.associativity > self.sim_data.cache_blocks) else (self.sim_data.cache_blocks // self.sim_data.associativity)
             accessed = snapshot["accessed_block"]
-            accessed_set = accessed % num_sets if num_sets > 0 else 0
+            accessed_set = accessed % num_sets if accessed is not None and num_sets > 0 else 0
             
-            # Access info
-            if snapshot["is_hit"]:
+            # Access info - handle initial step 0
+            if accessed is None:
+                ui.label("📋 INITIAL STATE - All cache memory empty").classes("text-sm font-semibold text-blue-700")
+            elif snapshot["is_hit"]:
                 if self.sim_data.associativity == 8:
                     ui.label(f"✓ ACCESS Block {accessed} (Set {accessed_set}) - HIT!").classes("text-sm font-semibold text-green-700")
                 else:
@@ -475,10 +483,11 @@ def _display_direct_mapped_cache(sim_data, cache_state, block_ages, accessed, ac
                 age = age_map.get(i, 0)
                 block_set = block % num_sets if num_sets > 0 else 0
                 
-                if block == accessed:
-                    bg_class = "bg-green-200"
-                elif snapshot.get("evicted_block") is not None and block == snapshot.get("evicted_block"):
+                # Cache miss - highlight accessed block in red (eviction or initial empty)
+                if not snapshot.get("is_hit", True) and block == accessed:
                     bg_class = "bg-red-200"
+                elif block == accessed:
+                    bg_class = "bg-green-200"
                 elif sim_data.associativity == 8 and block_set == accessed_set:
                     bg_class = "bg-blue-200"
                 else:
@@ -509,10 +518,10 @@ def _display_set_associative_cache(sim_data, cache_state, block_ages, accessed, 
                     if block is not None:
                         age = age_map.get((set_id, block_idx), 0)
                         
-                        if block == accessed:
-                            bg_class = "bg-green-200"
-                        elif snapshot.get("evicted_block") is not None and block == snapshot.get("evicted_block"):
+                        if not snapshot.get("is_hit", True) and block == accessed:
                             bg_class = "bg-red-200"
+                        elif block == accessed:
+                            bg_class = "bg-green-200"
                         else:
                             bg_class = "bg-blue-100"
                         

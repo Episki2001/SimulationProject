@@ -48,6 +48,9 @@ class CacheSimulator:
         else:
             self.cache_array = [[None] * self.blocks_per_set for _ in range(num_sets)]
         
+        # Capture initial empty state as step 0
+        self._capture_snapshot()
+        
         # Initialize replacement policy tracking
         for set_id in range(num_sets):
             self.replacement_order[set_id] = []
@@ -205,8 +208,12 @@ class CacheSimulator:
         self._capture_snapshot(block, False, evicted_block)
         return False
     
-    def _capture_snapshot(self, accessed_block: int, is_hit: bool, evicted_block: int | None):
-        """Capture the current cache state for animation."""
+    def _capture_snapshot(self, accessed_block: int | None = None, is_hit: bool | None = None, evicted_block: int | None = None):
+        """Capture the current cache state for animation.
+        
+        If called without arguments, captures the initial empty state (step 0).
+        Otherwise, captures the state after a memory access.
+        """
         block_age_info = []
         
         if self.is_direct_mapped:
@@ -226,7 +233,7 @@ class CacheSimulator:
             cache_state = [set_array.copy() for set_array in self.cache_array]
         
         snapshot = {
-            "step": len(self.cache_snapshots) + 1,
+            "step": len(self.cache_snapshots),
             "accessed_block": accessed_block,
             "is_hit": is_hit,
             "evicted_block": evicted_block,
